@@ -194,16 +194,26 @@ class WebServer {
             builder.append("File not found: " + file);
           }
         } else if (request.contains("multiply?")) {
-          // This multiplies two numbers, there is NO error handling, so when
-          // wrong data is given this just crashes
+          // This multiplies two numbers, there is error handling for wrong data
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
 
           // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+          Integer num1 = null;
+          Integer num2 = null;
+          try {
+            num1 = Integer.parseInt(query_pairs.get("num1"));
+            num2 = Integer.parseInt(query_pairs.get("num2"));
+          } catch (NumberFormatException e) {
+            // Generate error response
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Invalid input: " + e.getMessage());
+            return builder.toString().getBytes();
+          }
 
           // do math
           Integer result = num1 * num2;
@@ -213,9 +223,6 @@ class WebServer {
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
           builder.append("Result is: " + result);
-
-          // TODO: Include error handling here with a correct error code and
-          // a response that makes sense
 
         } else if (request.contains("github?")) {
           // pulls the query from the request and runs it with GitHub's REST API
@@ -234,17 +241,109 @@ class WebServer {
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
-          builder.append("Check the todos mentioned in the Java source file");
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
-          // response based on what the assignment document asks for
 
+          // Parse the JSON response and extract the required data
+          JSONArray repos = new JSONArray(json);
+          StringBuilder responseBuilder = new StringBuilder();
+          if (repos.length() == 0) {
+            builder.append("No repositories found.");
+          } else {
+            for (int i = 0; i < repos.length(); i++) {
+              JSONObject repo = repos.getJSONObject(i);
+              String fullName = repo.getString("full_name");
+              int id = repo.getInt("id");
+              JSONObject owner = repo.getJSONObject("owner");
+              String login = owner.getString("login");
+
+              // Append the extracted data to the response
+              responseBuilder.append("Full Name: ").append(fullName).append("<br>");
+              responseBuilder.append("ID: ").append(id).append("<br>");
+              responseBuilder.append("Owner Login: ").append(login).append("<br><br>");
+            }
+
+            // Set the response body to the extracted data
+            builder.append(responseBuilder.toString());
+          }
+
+
+
+
+
+
+          //TWO NEW REQUEST TYPES
+        }else if (request.contains("rectangle?")) {
+          // This calculates the area of a rectangle, there is error handling for wrong data
+      
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          // extract path parameters
+          query_pairs = splitQuery(request.replace("rectangle?", ""));
+      
+          // extract required fields from parameters
+
+          
+          Integer length = null;
+          Integer width = null;
+          try {
+            length = Integer.parseInt(query_pairs.get("length"));
+            width = Integer.parseInt(query_pairs.get("width"));
+          } catch (NumberFormatException e) {
+            // Generate error response
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Invalid input: " + e.getMessage());
+            return builder.toString().getBytes();
+          }
+      
+          // do math
+          Integer area = length * width;
+      
+          // Generate response
+          builder.append("HTTP/1.1 200 OK\n");
+          builder.append("Content-Type: text/html; charset=utf-8\n");
+          builder.append("\n");
+          builder.append("Area is: " + area);
+        
+        } else if (request.contains("greeting?")) {
+          // This generates a personalized greeting based on the user's name and the time of day
+          // Extract the name and time parameters from the request
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          query_pairs = splitQuery(request.replace("greeting?", ""));
+          String name = query_pairs.get("name");
+          String time = query_pairs.get("time");
+
+          // Check if name and time parameters are present
+          if (name == null || time == null || Integer.parseInt(time) > 24 || Integer.parseInt(time) < 0) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Missing required parameters.");
+            return builder.toString().getBytes();
+          }
+
+          // Generate the personalized greeting based on the time of day
+          String greeting;
+          if (Integer.parseInt(time) >= 0 && Integer.parseInt(time) < 12) {
+            greeting = "Good morning";
+          } else if (Integer.parseInt(time) >= 12 && Integer.parseInt(time) < 18) {
+            greeting = "Good afternoon";
+          } else {
+            greeting = "Good evening";
+          }
+
+          // Generate the response with the personalized greeting
+          builder.append("HTTP/1.1 200 OK\n");
+          builder.append("Content-Type: text/html; charset=utf-8\n");
+          builder.append("\n");
+          builder.append(greeting + ", " + name + "! It is currently " + time + ".");
+       
         } else {
           // if the request is not recognized at all
 
-          builder.append("HTTP/1.1 400 Bad Request\n");
+          builder.append("HTTP/1.1 404 Not Found\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
-          builder.append("I am not sure what you want me to do...");
+          builder.append("The requested resource was not found.");
         }
 
         // Output
