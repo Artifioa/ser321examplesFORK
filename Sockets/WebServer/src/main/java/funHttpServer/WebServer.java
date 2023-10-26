@@ -299,27 +299,27 @@ class WebServer {
             Map<String, String> query_pairs = new LinkedHashMap<String, String>();
             // extract path parameters
             try {
-              query_pairs = splitQuery(request.replace("shape?", ""));
-          } catch (IllegalArgumentException e) {
-              // Generate error response
-              builder.append("HTTP/1.1 400 Bad Request\n");
-              builder.append("Content-Type: text/html; charset=utf-8\n");
-              builder.append("\n");
-              builder.append("Invalid input: " + e.getMessage());
-              return builder.toString().getBytes();
-          }
-      
-          String shape = null;
-          try {
-              shape = query_pairs.get("shape");
-          } catch (NullPointerException e) {
-              // Generate error response
-              builder.append("HTTP/1.1 400 Bad Request\n");
-              builder.append("Content-Type: text/html; charset=utf-8\n");
-              builder.append("\n");
-              builder.append("Missing required parameter: shape");
-              return builder.toString().getBytes();
-          }
+        query_pairs = splitQuery(request.replace("shape?", ""));
+    } catch (IllegalArgumentException e) {
+        // Generate error response
+        builder.append("HTTP/1.1 400 Bad Request\n");
+        builder.append("Content-Type: text/html; charset=utf-8\n");
+        builder.append("\n");
+        builder.append("Invalid input: " + e.getMessage());
+        return builder.toString().getBytes();
+    }
+
+    String shape = null;
+    try {
+        shape = query_pairs.get("shape");
+    } catch (NullPointerException e) {
+        // Generate error response
+        builder.append("HTTP/1.1 400 Bad Request\n");
+        builder.append("Content-Type: text/html; charset=utf-8\n");
+        builder.append("\n");
+        builder.append("Missing required parameter: shape");
+        return builder.toString().getBytes();
+    }
             Integer length = null;
             Integer width = null;
             Integer radius = null;
