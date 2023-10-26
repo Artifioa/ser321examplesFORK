@@ -25,6 +25,9 @@ import java.util.Random;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.net.URLDecoder;
 
 class WebServer {
   public static void main(String args[]) {
@@ -271,43 +274,21 @@ class WebServer {
 
 
           //TWO NEW REQUEST TYPES
-        } else if (request.contains("shape?")) {
-          // This calculates the area of a shape, there is error handling for wrong data
+        }else if (request.contains("rectangle?")) {
+          // This calculates the area of a rectangle, there is error handling for wrong data
       
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
-          query_pairs = splitQuery(request.replace("shape?", ""));
+          query_pairs = splitQuery(request.replace("rectangle?", ""));
       
           // extract required fields from parameters
-          String shape = query_pairs.get("shape");
+
+          
           Integer length = null;
           Integer width = null;
-          Integer radius = null;
-          Integer base = null;
-          Integer height = null;
-          Double pi = 3.14159;
-          Integer area = null;
-          
           try {
-            if (shape.equals("rectangle")) {
-              length = Integer.parseInt(query_pairs.get("length"));
-              width = Integer.parseInt(query_pairs.get("width"));
-              area = length * width;
-            } else if (shape.equals("circle")) {
-              radius = Integer.parseInt(query_pairs.get("radius"));
-              area = (int) (pi * radius * radius);
-            } else if (shape.equals("triangle")) {
-              base = Integer.parseInt(query_pairs.get("base"));
-              height = Integer.parseInt(query_pairs.get("height"));
-              area = (base * height) / 2;
-            } else {
-              // Generate error response
-              builder.append("HTTP/1.1 400 Bad Request\n");
-              builder.append("Content-Type: text/html; charset=utf-8\n");
-              builder.append("\n");
-              builder.append("Invalid shape: " + shape);
-              return builder.toString().getBytes();
-            }
+            length = Integer.parseInt(query_pairs.get("length"));
+            width = Integer.parseInt(query_pairs.get("width"));
           } catch (NumberFormatException e) {
             // Generate error response
             builder.append("HTTP/1.1 400 Bad Request\n");
@@ -317,11 +298,14 @@ class WebServer {
             return builder.toString().getBytes();
           }
       
+          // do math
+          Integer area = length * width;
+      
           // Generate response
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
-          builder.append("Area of " + shape + " is: " + area);
+          builder.append("Area is: " + area);
         
         } else if (request.contains("greeting?")) {
           // This generates a personalized greeting based on the user's name and the time of day
@@ -332,18 +316,11 @@ class WebServer {
           String time = query_pairs.get("time");
 
           // Check if name and time parameters are present
-          if (name == null || time == null) {
+          if (name == null || time == null || Integer.parseInt(time) > 24 || Integer.parseInt(time) < 0) {
             builder.append("HTTP/1.1 400 Bad Request\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
             builder.append("Missing required parameters.");
-            return builder.toString().getBytes();
-          }
-          else if (Integer.parseInt(time) > 24 || Integer.parseInt(time) < 0){
-            builder.append("HTTP/1.1 400 Bad Request\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            builder.append("Outside of time itself.");
             return builder.toString().getBytes();
           }
 
