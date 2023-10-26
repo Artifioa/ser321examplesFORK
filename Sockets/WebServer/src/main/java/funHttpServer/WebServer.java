@@ -308,9 +308,18 @@ class WebServer {
               builder.append("Invalid input: " + e.getMessage());
               return builder.toString().getBytes();
           }
-
-            // extract required fields from parameters
-            String shape = query_pairs.get("shape");
+      
+          String shape = null;
+          try {
+              shape = query_pairs.get("shape");
+          } catch (NullPointerException e) {
+              // Generate error response
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Missing required parameter: shape");
+              return builder.toString().getBytes();
+          }
             Integer length = null;
             Integer width = null;
             Integer radius = null;
