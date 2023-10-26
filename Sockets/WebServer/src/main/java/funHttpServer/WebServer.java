@@ -215,6 +215,13 @@ class WebServer {
             builder.append("\n");
             builder.append("Invalid input: " + e.getMessage());
             return builder.toString().getBytes();
+          } catch (IllegalArgumentException e) {
+            // Generate error response
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Invalid input: " + e.getMessage());
+            return builder.toString().getBytes();
           }
 
           // do math
