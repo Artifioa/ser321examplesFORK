@@ -27,7 +27,6 @@ import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.net.URLDecoder;
 
 class WebServer {
   public static void main(String args[]) {
@@ -198,135 +197,181 @@ class WebServer {
           }
         } else if (request.contains("multiply?")) {
           // This multiplies two numbers, there is error handling for wrong data
-
+      
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
-
+      
           // extract required fields from parameters
           Integer num1 = null;
           Integer num2 = null;
           try {
-            num1 = Integer.parseInt(query_pairs.get("num1"));
-            num2 = Integer.parseInt(query_pairs.get("num2"));
+              if (query_pairs.containsKey("num1")) {
+                  num1 = Integer.parseInt(query_pairs.get("num1"));
+              } else {
+                  throw new IllegalArgumentException("num1 parameter is missing");
+              }
+              if (query_pairs.containsKey("num2")) {
+                  num2 = Integer.parseInt(query_pairs.get("num2"));
+              } else {
+                  throw new IllegalArgumentException("num2 parameter is missing");
+              }
           } catch (NumberFormatException e) {
-            // Generate error response
-            builder.append("HTTP/1.1 400 Bad Request\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            builder.append("Invalid input: " + e.getMessage());
-            return builder.toString().getBytes();
+              // Generate error response
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Invalid input: " + e.getMessage());
+              return builder.toString().getBytes();
+          } catch (IllegalArgumentException e) {
+              // Generate error response
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append(e.getMessage());
+              return builder.toString().getBytes();
           }
-
+      
           // do math
           Integer result = num1 * num2;
-
+      
           // Generate response
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
           builder.append("Result is: " + result);
-
-        } else if (request.contains("github?")) {
-          // pulls the query from the request and runs it with GitHub's REST API
-          // check out https://docs.github.com/rest/reference/
-          //
-          // HINT: REST is organized by nesting topics. Figure out the biggest one first,
-          //     then drill down to what you care about
-          // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
-          //     "/repos/OWNERNAME/REPONAME/contributors"
-
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("github?", ""));
-          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
-
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-
-          // Parse the JSON response and extract the required data
-          JSONArray repos = new JSONArray(json);
-          StringBuilder responseBuilder = new StringBuilder();
-          if (repos.length() == 0) {
-            builder.append("No repositories found.");
-          } else {
-            for (int i = 0; i < repos.length(); i++) {
-              JSONObject repo = repos.getJSONObject(i);
-              String fullName = repo.getString("full_name");
-              int id = repo.getInt("id");
-              JSONObject owner = repo.getJSONObject("owner");
-              String login = owner.getString("login");
-
-              // Append the extracted data to the response
-              responseBuilder.append("Full Name: ").append(fullName).append("<br>");
-              responseBuilder.append("ID: ").append(id).append("<br>");
-              responseBuilder.append("Owner Login: ").append(login).append("<br><br>");
-            }
-
-            // Set the response body to the extracted data
-            builder.append(responseBuilder.toString());
-          }
-
-
-
-
-
-
-          //TWO NEW REQUEST TYPES
-        } else if (request.contains("shape?")) {
-          // This calculates the area of a shape, there is error handling for wrong data
-      
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          // extract path parameters
-          query_pairs = splitQuery(request.replace("shape?", ""));
-      
-          // extract required fields from parameters
-          String shape = query_pairs.get("shape");
-          Integer length = null;
-          Integer width = null;
-          Integer radius = null;
-          Integer base = null;
-          Integer height = null;
-          Double pi = 3.14159;
-          Integer area = null;
-          
-          try {
-            if (shape.equals("rectangle")) {
-              length = Integer.parseInt(query_pairs.get("length"));
-              width = Integer.parseInt(query_pairs.get("width"));
-              area = length * width;
-            } else if (shape.equals("circle")) {
-              radius = Integer.parseInt(query_pairs.get("radius"));
-              area = (int) (pi * radius * radius);
-            } else if (shape.equals("triangle")) {
-              base = Integer.parseInt(query_pairs.get("base"));
-              height = Integer.parseInt(query_pairs.get("height"));
-              area = (base * height) / 2;
-            } else {
-              // Generate error response
-              builder.append("HTTP/1.1 400 Bad Request\n");
-              builder.append("Content-Type: text/html; charset=utf-8\n");
-              builder.append("\n");
-              builder.append("Invalid shape: " + shape);
-              return builder.toString().getBytes();
-            }
-          } catch (NumberFormatException e) {
+      } else if (request.contains("github?")) {
+        // pulls the query from the request and runs it with GitHub's REST API
+        // check out https://docs.github.com/rest/reference/
+        //
+        // HINT: REST is organized by nesting topics. Figure out the biggest one first,
+        //     then drill down to what you care about
+        // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
+        //     "/repos/OWNERNAME/REPONAME/contributors"
+    
+        Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+        query_pairs = splitQuery(request.replace("github?", ""));
+        String query = query_pairs.get("query");
+        if (query == null) {
             // Generate error response
             builder.append("HTTP/1.1 400 Bad Request\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("Invalid input: " + e.getMessage());
+            builder.append("Missing required parameter: query");
             return builder.toString().getBytes();
-          }
-      
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Area of " + shape + " is: " + area);
+        }
+    
+        String json = fetchURL("https://api.github.com/" + query);
+        System.out.println(json);
+    
+        builder.append("HTTP/1.1 200 OK\n");
+        builder.append("Content-Type: text/html; charset=utf-8\n");
+        builder.append("\n");
+    
+        // Parse the JSON response and extract the required data
+        JSONArray repos;
+        try {
+            repos = new JSONArray(json);
+        } catch (JSONException e) {
+            // Generate error response
+            builder.append("Invalid JSON response: " + e.getMessage());
+            return builder.toString().getBytes();
+        }
+        StringBuilder responseBuilder = new StringBuilder();
+        if (repos.length() == 0) {
+            builder.append("No repositories found.");
+        } else {
+            for (int i = 0; i < repos.length(); i++) {
+                JSONObject repo = repos.getJSONObject(i);
+                String fullName = repo.getString("full_name");
+                int id = repo.getInt("id");
+                JSONObject owner = repo.getJSONObject("owner");
+                String login = owner.getString("login");
+    
+                // Append the extracted data to the response
+                responseBuilder.append("Full Name: ").append(fullName).append("<br>");
+                responseBuilder.append("ID: ").append(id).append("<br>");
+                responseBuilder.append("Owner Login: ").append(login).append("<br><br>");
+            }
+    
+            // Set the response body to the extracted data
+            builder.append(responseBuilder.toString());
+        }
+    } else if (request.contains("shape?")) {
+            // This calculates the area of a shape, there is error handling for wrong data
 
-        
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            // extract path parameters
+            query_pairs = splitQuery(request.replace("shape?", ""));
+
+            // extract required fields from parameters
+            String shape = query_pairs.get("shape");
+            Integer length = null;
+            Integer width = null;
+            Integer radius = null;
+            Integer base = null;
+            Integer height = null;
+            Double pi = 3.14159;
+            Integer area = null;
+
+            try {
+                if (shape == null) {
+                    throw new IllegalArgumentException("Shape parameter is missing");
+                } else if (shape.equals("rectangle")) {
+                    if (query_pairs.containsKey("length")) {
+                        length = Integer.parseInt(query_pairs.get("length"));
+                    } else {
+                        throw new IllegalArgumentException("Length parameter is missing");
+                    }
+                    if (query_pairs.containsKey("width")) {
+                        width = Integer.parseInt(query_pairs.get("width"));
+                    } else {
+                        throw new IllegalArgumentException("Width parameter is missing");
+                    }
+                    area = length * width;
+                } else if (shape.equals("circle")) {
+                    if (query_pairs.containsKey("radius")) {
+                        radius = Integer.parseInt(query_pairs.get("radius"));
+                    } else {
+                        throw new IllegalArgumentException("Radius parameter is missing");
+                    }
+                    area = (int) (pi * radius * radius);
+                } else if (shape.equals("triangle")) {
+                    if (query_pairs.containsKey("base")) {
+                        base = Integer.parseInt(query_pairs.get("base"));
+                    } else {
+                        throw new IllegalArgumentException("Base parameter is missing");
+                    }
+                    if (query_pairs.containsKey("height")) {
+                        height = Integer.parseInt(query_pairs.get("height"));
+                    } else {
+                        throw new IllegalArgumentException("Height parameter is missing");
+                    }
+                    area = (base * height) / 2;
+                } else {
+                    throw new IllegalArgumentException("Invalid shape: " + shape);
+                }
+            } catch (NumberFormatException e) {
+                // Generate error response
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Invalid input: " + e.getMessage());
+                return builder.toString().getBytes();
+            } catch (IllegalArgumentException e) {
+                // Generate error response
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append(e.getMessage());
+                return builder.toString().getBytes();
+            }
+
+            // Generate response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Area of " + shape + " is: " + area);
         } else if (request.contains("greeting?")) {
           // This generates a personalized greeting based on the user's name and the time of day
           // Extract the name and time parameters from the request
@@ -334,40 +379,53 @@ class WebServer {
           query_pairs = splitQuery(request.replace("greeting?", ""));
           String name = query_pairs.get("name");
           String time = query_pairs.get("time");
-
+      
           // Check if name and time parameters are present
           if (name == null || time == null) {
-            builder.append("HTTP/1.1 400 Bad Request\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            builder.append("Missing required parameters.");
-            return builder.toString().getBytes();
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Missing required parameters.");
+              return builder.toString().getBytes();
+          } else {
+              try {
+                  int timeValue = Integer.parseInt(time);
+                  if (timeValue < 0 || timeValue > 24) {
+                      throw new IllegalArgumentException("Invalid time value: " + timeValue);
+                  }
+              } catch (NumberFormatException e) {
+                  // Generate error response
+                  builder.append("HTTP/1.1 400 Bad Request\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("Invalid input: " + e.getMessage());
+                  return builder.toString().getBytes();
+              } catch (IllegalArgumentException e) {
+                  // Generate error response
+                  builder.append("HTTP/1.1 400 Bad Request\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append(e.getMessage());
+                  return builder.toString().getBytes();
+              }
           }
-          else if (Integer.parseInt(time) > 24 || Integer.parseInt(time) < 0){
-            builder.append("HTTP/1.1 400 Bad Request\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            builder.append("Outside of time itself.");
-            return builder.toString().getBytes();
-          }
-
+      
           // Generate the personalized greeting based on the time of day
           String greeting;
           if (Integer.parseInt(time) >= 0 && Integer.parseInt(time) < 12) {
-            greeting = "Good morning";
+              greeting = "Good morning";
           } else if (Integer.parseInt(time) >= 12 && Integer.parseInt(time) < 18) {
-            greeting = "Good afternoon";
+              greeting = "Good afternoon";
           } else {
-            greeting = "Good evening";
+              greeting = "Good evening";
           }
-
+      
           // Generate the response with the personalized greeting
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
           builder.append(greeting + ", " + name + "! It is currently " + time + ".");
-       
-        } else {
+      } else {
           // if the request is not recognized at all
 
           builder.append("HTTP/1.1 404 Not Found\n");
