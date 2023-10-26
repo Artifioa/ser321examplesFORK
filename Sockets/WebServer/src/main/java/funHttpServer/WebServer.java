@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import java.net.URLDecoder;
 
 class WebServer {
   public static void main(String args[]) {
@@ -215,13 +216,6 @@ class WebServer {
             builder.append("\n");
             builder.append("Invalid input: " + e.getMessage());
             return builder.toString().getBytes();
-          } catch (IllegalArgumentException e) {
-            // Generate error response
-            builder.append("HTTP/1.1 400 Bad Request\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            builder.append("Invalid input: " + e.getMessage());
-            return builder.toString().getBytes();
           }
 
           // do math
@@ -324,15 +318,8 @@ class WebServer {
             builder.append("\n");
             builder.append("Invalid input: " + e.getMessage());
             return builder.toString().getBytes();
-          } catch (IllegalArgumentException e) {
-            // Generate error response
-            builder.append("HTTP/1.1 400 Bad Request\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            builder.append(e.getMessage());
-            return builder.toString().getBytes();
           }
-            
+      
           // Generate response
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
