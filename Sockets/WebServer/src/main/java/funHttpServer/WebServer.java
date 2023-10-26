@@ -200,8 +200,16 @@ class WebServer {
       
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
-          query_pairs = splitQuery(request.replace("multiply?", ""));
-      
+          try {
+              query_pairs = splitQuery(request.replace("multiply?", ""));
+            } catch (StringIndexOutOfBoundsException e) {
+                // Generate error response
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Invalid input: " + e.getMessage());
+                return builder.toString().getBytes();
+            }
           // extract required fields from parameters
           Integer num1 = null;
           Integer num2 = null;
@@ -250,7 +258,18 @@ class WebServer {
         //     "/repos/OWNERNAME/REPONAME/contributors"
     
         Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-        query_pairs = splitQuery(request.replace("github?", ""));
+        
+            try {
+              query_pairs = splitQuery(request.replace("github?", ""));
+            } catch (StringIndexOutOfBoundsException e) {
+                // Generate error response
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Invalid input: " + e.getMessage());
+                return builder.toString().getBytes();
+            }
+        
         String query = query_pairs.get("query");
         if (query == null) {
             // Generate error response
@@ -390,7 +409,16 @@ class WebServer {
           // This generates a personalized greeting based on the user's name and the time of day
           // Extract the name and time parameters from the request
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("greeting?", ""));
+          try {
+              query_pairs = splitQuery(request.replace("greeting?", ""));
+            } catch (StringIndexOutOfBoundsException e) {
+                // Generate error response
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Invalid input: " + e.getMessage());
+                return builder.toString().getBytes();
+            }
           String name = query_pairs.get("name");
           String time = query_pairs.get("time");
       
