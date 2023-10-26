@@ -25,3 +25,6 @@ task FunWebServer(type: JavaExec) {
 }
 
 
+dependencies {
+    implementation 'org.json:json:20210308' // Use the latest version available
+}
