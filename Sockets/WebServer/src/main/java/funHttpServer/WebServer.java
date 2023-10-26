@@ -270,13 +270,9 @@ class WebServer {
     
         // Parse the JSON response and extract the required data
         JSONArray repos;
-        try {
-            repos = new JSONArray(json);
-        } catch (JSONException e) {
-            // Generate error response
-            builder.append("Invalid JSON response: " + e.getMessage());
-            return builder.toString().getBytes();
-        }
+
+        repos = new JSONArray(json);
+   
         StringBuilder responseBuilder = new StringBuilder();
         if (repos.length() == 0) {
             builder.append("No repositories found.");
