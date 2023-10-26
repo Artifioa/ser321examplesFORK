@@ -25,9 +25,8 @@ task FunWebServer(type: JavaExec) {
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
-
-dependencies {
-    implementation 'org.json:json:20220308' // Use the latest version available
+dependencies{
+  implementation 'org.json:json:20171018' // org.json
 }
