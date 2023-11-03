@@ -80,7 +80,7 @@ class SockClient {
                         // CharCount request
                         System.out.println("Choose charcount, enter a string:");
                         String charCountString = scanner.nextLine();
-                        json.put("type", "charcount");
+                        json.put("type", "charCount");
                         json.put("findchar", false);
                         json.put("count", charCountString);
                         break;

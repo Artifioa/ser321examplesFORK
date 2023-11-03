@@ -201,7 +201,7 @@ public class SockServer {
     String input = req.getString("count");
     if (input == null || input.isEmpty()) {
         JSONObject res = new JSONObject();
-        res.put("type", "charcount");
+        res.put("type", "charCount");
         res.put("ok", false);
         res.put("message", "Input string is empty");
         return res;
@@ -223,14 +223,14 @@ public class SockServer {
                 }
             }
             JSONObject res = new JSONObject();
-            res.put("type", "charcount");
+            res.put("type", "charCount");
             res.put("ok", true);
             res.put("result", count);
             return res;
         } else {
             // Handle the case where "find" is missing
             JSONObject res = new JSONObject();
-            res.put("type", "charcount");
+            res.put("type", "charCount");
             res.put("ok", false);
             res.put("message", "The 'find' field is missing for findchar=true");
             return res;
@@ -238,7 +238,7 @@ public class SockServer {
     } else {
         int count = input.length();
         JSONObject res = new JSONObject();
-        res.put("type", "charcount");
+        res.put("type", "charCount");
         res.put("ok", true);
         res.put("result", count);
         return res;
