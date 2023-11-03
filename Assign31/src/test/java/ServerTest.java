@@ -6,6 +6,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class ServerTest {
@@ -234,5 +240,45 @@ public class ServerTest {
 
         // calling the other test to make sure server continues to work and the "continue" does what it is supposed to do
         addRequest();
+    }
+
+    @Test
+    public void charCountTest() throws IOException {
+        SockServer server = new SockServer();
+        server.start(8888);
+
+        Socket sock = new Socket("localhost", 8888);
+        String input = "hello world";
+        String expectedOutput = "{'ok':true,'type':'charCount','result':11}";
+        String actualOutput = TestUtils.sendRequest(sock, "charCount", input);
+        assertEquals(expectedOutput, actualOutput);
+
+        input = "SockServer is awesome!";
+        expectedOutput = "{'ok':true,'type':'charCount','result':21}";
+        actualOutput = TestUtils.sendRequest(sock, "charCount", input);
+        assertEquals(expectedOutput, actualOutput);
+
+        sock.close();
+        server.stop();
+    }
+
+    @Test
+    public void storyboardTest() throws IOException {
+        SockServer server = new SockServer();
+        server.start(8888);
+
+        Socket sock = new Socket("localhost", 8888);
+        List<String> input = Arrays.asList("hello", "world");
+        String expectedOutput = "{'ok':true,'type':'storyboard','result':'helloworld'}";
+        String actualOutput = TestUtils.sendRequest(sock, "storyboard", input);
+        assertEquals(expectedOutput, actualOutput);
+
+        input = Arrays.asList("Sock", "Server", "is", "awesome!");
+        expectedOutput = "{'ok':true,'type':'storyboard','result':'SockServerisawesome!'}";
+        actualOutput = TestUtils.sendRequest(sock, "storyboard", input);
+        assertEquals(expectedOutput, actualOutput);
+
+        sock.close();
+        server.stop();
     }
 }
