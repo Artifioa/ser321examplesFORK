@@ -200,37 +200,51 @@ public class SockServer {
   static JSONObject charCount(JSONObject req) {
     String input = req.getString("count");
     if (input == null || input.isEmpty()) {
-      JSONObject res = new JSONObject();
-      res.put("type", "charcount");
-      res.put("ok", false);
-      res.put("message", "Input string is empty");
-      return res;
+        JSONObject res = new JSONObject();
+        res.put("type", "charcount");
+        res.put("ok", false);
+        res.put("message", "Input string is empty");
+        return res;
     }
 
-    boolean findChar = req.getBoolean("findchar");
-    if (findChar) {
-      char searchChar = req.getString("find").charAt(0);
-      int count = 0;
-      for (int i = 0; i < input.length(); i++) {
-        char c = input.charAt(i);
-        if (c == searchChar) {
-          count++;
-        }
-      }
-      JSONObject res = new JSONObject();
-      res.put("type", "charcount");
-      res.put("ok", true);
-      res.put("result", count);
-      return res;
-    } else {
-      int count = input.length();
-      JSONObject res = new JSONObject();
-      res.put("type", "charcount");
-      res.put("ok", true);
-      res.put("result", count);
-      return res;
+    boolean findChar = false;
+    if (req.has("findchar")) {
+        findChar = req.getBoolean("findchar");
     }
-  }
+
+    if (findChar) {
+        if (req.has("find")) {
+            char searchChar = req.getString("find").charAt(0);
+            int count = 0;
+            for (int i = 0; i < input.length(); i++) {
+                char c = input.charAt(i);
+                if (c == searchChar) {
+                    count++;
+                }
+            }
+            JSONObject res = new JSONObject();
+            res.put("type", "charcount");
+            res.put("ok", true);
+            res.put("result", count);
+            return res;
+        } else {
+            // Handle the case where "find" is missing
+            JSONObject res = new JSONObject();
+            res.put("type", "charcount");
+            res.put("ok", false);
+            res.put("message", "The 'find' field is missing for findchar=true");
+            return res;
+        }
+    } else {
+        int count = input.length();
+        JSONObject res = new JSONObject();
+        res.put("type", "charcount");
+        res.put("ok", true);
+        res.put("result", count);
+        return res;
+    }
+}
+
 
   // handles the simple addmany request
   static JSONObject addmany(JSONObject req){
