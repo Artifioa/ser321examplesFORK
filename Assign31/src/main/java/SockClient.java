@@ -77,12 +77,12 @@ class SockClient {
                         json.put("nums", array);
                         break;
                     case 4:
-                        // CharCount request
+                        // charcount request
                         System.out.println("Choose charcount, enter a string:");
-                        String charCountString = scanner.nextLine();
-                        json.put("type", "charCount");
+                        String charcountString = scanner.nextLine();
+                        json.put("type", "charcount");
                         json.put("findchar", false);
-                        json.put("count", charCountString);
+                        json.put("count", charcountString);
                         break;
                     case 5:
                         // Storyboard request

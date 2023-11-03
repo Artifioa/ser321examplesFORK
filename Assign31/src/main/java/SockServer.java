@@ -90,8 +90,8 @@ public class SockServer {
             res = add(req);
           } else if (req.getString("type").equals("addmany")) {
             res = addmany(req);
-          } else if (req.getString("type").equals("charCount")) {
-            res = charCount(req);
+          } else if (req.getString("type").equals("charcount")) {
+            res = charcount(req);
           } else if (req.getString("type").equals("storyboard")) {
             res = storyboard(req);
           } else {
@@ -197,11 +197,11 @@ public class SockServer {
 
   // implement me in assignment 3
   // handles the charcount request
-  static JSONObject charCount(JSONObject req) {
+  static JSONObject charcount(JSONObject req) {
     String input = req.getString("count");
     if (input == null || input.isEmpty()) {
         JSONObject res = new JSONObject();
-        res.put("type", "charCount");
+        res.put("type", "charcount");
         res.put("ok", false);
         res.put("message", "Input string is empty");
         return res;
@@ -223,14 +223,14 @@ public class SockServer {
                 }
             }
             JSONObject res = new JSONObject();
-            res.put("type", "charCount");
+            res.put("type", "charcount");
             res.put("ok", true);
             res.put("result", count);
             return res;
         } else {
             // Handle the case where "find" is missing
             JSONObject res = new JSONObject();
-            res.put("type", "charCount");
+            res.put("type", "charcount");
             res.put("ok", false);
             res.put("message", "The 'find' field is missing for findchar=true");
             return res;
@@ -238,7 +238,7 @@ public class SockServer {
     } else {
         int count = input.length();
         JSONObject res = new JSONObject();
-        res.put("type", "charCount");
+        res.put("type", "charcount");
         res.put("ok", true);
         res.put("result", count);
         return res;
