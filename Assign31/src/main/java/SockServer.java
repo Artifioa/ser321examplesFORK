@@ -3,8 +3,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.*;
-import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.io.*;
 
 /**
  * A class to demonstrate a simple client-server connection using sockets.
@@ -89,6 +90,10 @@ public class SockServer {
             res = add(req);
           } else if (req.getString("type").equals("addmany")) {
             res = addmany(req);
+          } else if (req.getString("type").equals("charCount")) {
+            res = charCount(req);
+          } else if (req.getString("type").equals("storyboard")) {
+            res = storyboard(req);
           } else {
             res = wrongType(req);
           }
@@ -163,100 +168,83 @@ public class SockServer {
   }
 
   // implement me in assignment 3
-  // Global variables to store the story and usernames
-  static ArrayList<String> story = new ArrayList<>();
-  static ArrayList<String> usernames = new ArrayList<>();
+  static List<String> storyboardList = new ArrayList<>();
+  static List<String> userList = new ArrayList<>();
 
+  // implement me in assignment 3
   static JSONObject storyboard(JSONObject req) {
-    JSONObject res = new JSONObject();
+    System.out.println("Storyboard request: " + req.toString());
+    boolean isViewRequest = req.getBoolean("view");
 
-    // Check if request has "view" field
-    if (!req.has("view")) {
-      res.put("ok", false);
-      res.put("message", "Request must have 'view' field");
-      return res;
-    }
+    if (isViewRequest) {
+        // Handle request to view storyboard
+        JSONArray storyboardArray = new JSONArray(storyboardList);
+        JSONArray usersArray = new JSONArray(userList);
 
-    boolean view = req.getBoolean("view");
-
-    if (view) {
-      // View storyboard
-      res.put("ok", true);
-      res.put("storyboard", story);
-      res.put("users", usernames);
+        // Construct the response JSON
+        JSONObject res = new JSONObject();
+        res.put("type", "storyboard");
+        res.put("ok", true);
+        res.put("storyboard", storyboardArray);
+        res.put("users", usersArray);
+        return res;
     } else {
-      // Add to storyboard
-      // Check if request has "name" and "story" fields
-      if (!req.has("name") || !req.has("story")) {
-        res.put("ok", false);
-        res.put("message", "Request must have 'name' and 'story' fields");
+        // Handle request to add to storyboard
+        // Extract name and story from the request
+        String name = req.getString("name");
+        String story = req.getString("story");
+
+        // Add the new story and user to the storyboard
+        storyboardList.add(story);
+        userList.add(name);
+
+        // Construct the response JSON
+        JSONObject res = new JSONObject();
+        res.put("type", "storyboard");
+        res.put("ok", true);
+        res.put("message", "Added to storyboard successfully");
         return res;
       }
-
-      String name = req.getString("name");
-      String story = req.getString("story");
-
-      // Check if name already exists
-      if (usernames.contains(name)) {
-        res.put("ok", false);
-        res.put("message", "Name already exists");
-        return res;
-      }
-
-      // Add story and name to storyboard and users lists
-      SockServer.story.add(story);
-      SockServer.usernames.add(name);
-
-      // Create success response with updated storyboard and users lists
-      res.put("ok", true);
-      res.put("storyboard", SockServer.story);
-      res.put("users", SockServer.usernames);
     }
 
-    res.put("type", "storyboard");
-    return res;
-  }
 
   // implement me in assignment 3
   static JSONObject charCount(JSONObject req) {
-      JSONObject res = new JSONObject();
+    System.out.println("CharCount request: " + req.toString());
+    JSONObject res = testField(req, "count");
 
-      // Check if request has "count" field
-      if (!req.has("count")) {
-        res.put("ok", false);
-        res.put("message", "Request must have 'count' field");
+    if (!res.getBoolean("ok")) {
         return res;
-      }
+    }
 
-      String str = req.getString("count");
+    String inputString = req.getString("count");
+    boolean findChar = req.getBoolean("findchar");
 
-      // Check if request has "findchar" field
-      if (req.has("findchar") && req.getBoolean("findchar")) {
-        // Check if request has "find" field
-        if (!req.has("find")) {
-          res.put("ok", false);
-          res.put("message", "Request must have 'find' field when 'findchar' is true");
-          return res;
-        }
+    if (findChar) {
+        char charToFind = req.getString("find").charAt(0);
+        int charCount = countChar(inputString, charToFind);
+        res.put("result", charCount);
+    } else {
+        int totalChars = inputString.length();
+        res.put("result", totalChars);
+    }
 
-        char c = req.getString("find").charAt(0);
-        int count = 0;
-        for (int i = 0; i < str.length(); i++) {
-          if (str.charAt(i) == c) {
+    res.put("type", "charCount");
+    res.put("ok", true);
+
+    return res;
+}
+
+// Helper method to count occurrences of a character in a string
+static int countChar(String input, char target) {
+    int count = 0;
+    for (char c : input.toCharArray()) {
+        if (c == target) {
             count++;
-          }
         }
-        res.put("ok", true);
-        res.put("type", "charcount");
-        res.put("result", count);
-      } else {
-        res.put("ok", true);
-        res.put("type", "charcount");
-        res.put("result", str.length());
-      }
-
-      return res;
-  }
+    }
+    return count;
+}
 
   // handles the simple addmany request
   static JSONObject addmany(JSONObject req){
