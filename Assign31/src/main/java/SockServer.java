@@ -168,83 +168,69 @@ public class SockServer {
   }
 
   // implement me in assignment 3
+
   static List<String> storyboardList = new ArrayList<>();
   static List<String> userList = new ArrayList<>();
 
-  // implement me in assignment 3
   static JSONObject storyboard(JSONObject req) {
-    System.out.println("Storyboard request: " + req.toString());
-    boolean isViewRequest = req.getBoolean("view");
-
-    if (isViewRequest) {
-        // Handle request to view storyboard
-        JSONArray storyboardArray = new JSONArray(storyboardList);
-        JSONArray usersArray = new JSONArray(userList);
-
-        // Construct the response JSON
-        JSONObject res = new JSONObject();
+    JSONObject res = new JSONObject();
+    boolean view = req.getBoolean("view");
+    if (!view) {
+      String username = req.getString("name");
+      String sentence = req.getString("story");
+      if (userList.contains(username)) {
         res.put("type", "storyboard");
-        res.put("ok", true);
-        res.put("storyboard", storyboardArray);
-        res.put("users", usersArray);
-        return res;
-    } else {
-        // Handle request to add to storyboard
-        // Extract name and story from the request
-        String name = req.getString("name");
-        String story = req.getString("story");
-
-        // Add the new story and user to the storyboard
-        storyboardList.add(story);
-        userList.add(name);
-
-        // Construct the response JSON
-        JSONObject res = new JSONObject();
-        res.put("type", "storyboard");
-        res.put("ok", true);
-        res.put("message", "Added to storyboard successfully");
+        res.put("ok", false);
+        res.put("message", "Username already exists");
         return res;
       }
+      userList.add(username);
+      storyboardList.add(sentence);
     }
+    res.put("type", "storyboard");
+    res.put("ok", true);
+    res.put("storyboard", storyboardList);
+    res.put("users", userList);
+    return res;
+  }
 
 
   // implement me in assignment 3
+  // handles the charcount request
   static JSONObject charCount(JSONObject req) {
-    System.out.println("CharCount request: " + req.toString());
-    JSONObject res = testField(req, "count");
-
-    if (!res.getBoolean("ok")) {
-        return res;
+    String input = req.getString("count");
+    if (input == null || input.isEmpty()) {
+      JSONObject res = new JSONObject();
+      res.put("type", "charcount");
+      res.put("ok", false);
+      res.put("message", "Input string is empty");
+      return res;
     }
 
-    String inputString = req.getString("count");
     boolean findChar = req.getBoolean("findchar");
-
     if (findChar) {
-        char charToFind = req.getString("find").charAt(0);
-        int charCount = countChar(inputString, charToFind);
-        res.put("result", charCount);
-    } else {
-        int totalChars = inputString.length();
-        res.put("result", totalChars);
-    }
-
-    res.put("type", "charCount");
-    res.put("ok", true);
-
-    return res;
-}
-
-// Helper method to count occurrences of a character in a string
-static int countChar(String input, char target) {
-    int count = 0;
-    for (char c : input.toCharArray()) {
-        if (c == target) {
-            count++;
+      char searchChar = req.getString("find").charAt(0);
+      int count = 0;
+      for (int i = 0; i < input.length(); i++) {
+        char c = input.charAt(i);
+        if (c == searchChar) {
+          count++;
         }
+      }
+      JSONObject res = new JSONObject();
+      res.put("type", "charcount");
+      res.put("ok", true);
+      res.put("result", count);
+      return res;
+    } else {
+      int count = input.length();
+      JSONObject res = new JSONObject();
+      res.put("type", "charcount");
+      res.put("ok", true);
+      res.put("result", count);
+      return res;
     }
-    return count;
-}
+  }
 
   // handles the simple addmany request
   static JSONObject addmany(JSONObject req){
