@@ -85,8 +85,8 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 		// generate random radius that is normally distributed around the average radius
 		double radius = average_radius * (1 + 0.2 * ((double)rand() / RAND_MAX - 0.5));
 		// loop through the pixels in a square bounding box around the circle center
-		for (int j = fmax(0, y - radius); j < fmin(image_height, y + radius); j++) {
-			for (int k = fmax(0, x - radius); k < fmin(image_width, x + radius); k++) {
+		for (int j = fmax(0, y - radius); j < fmin(image_height, y + radius +1); j++) {
+			for (int k = fmax(0, x - radius); k < fmin(image_width, x + radius +1); k++) {
 				// check if the pixel is within the circle radius
 				double distance = sqrt(pow(k - x, 2) + pow(j - y, 2));
 				if (distance <= radius) {
