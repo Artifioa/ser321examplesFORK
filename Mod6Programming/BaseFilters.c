@@ -37,7 +37,14 @@
 //DATA STRUCTURES
 
 //TODO: finish me
-
+	int image_width;
+	int image_height;
+	unsigned char* input_pixels;
+	unsigned char* output_pixels;
+	int num_holes;
+	int (*hole_centers)[2];
+	double* hole_radii;
+	int average_radius;
 
 ////////////////////////////////////////////////////////////////////////////////
 //IMAGE FILTER FUNCTIONS
@@ -246,7 +253,7 @@ void* cheese_filter(void* arg) {
 	}
 
 	// Define the average radius of the holes
-	int average_radius = round(0.08 * fmin(image_width, image_height));
+	average_radius = round(0.08 * fmin(image_width, image_height));
 
 	// Loop through each pixel in the column range
 	for (int x = column_start; x < column_end; x++) {
