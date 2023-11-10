@@ -90,7 +90,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 }
 
 // Define the Swiss cheese filter function
-void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
+void* swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
     // Define the average radius of the holes
     int average_radius = round(0.08 * fmin(image_width, image_height));
     draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
 	fclose(input_file);
 
 	// Apply the selected filter to the image data using pthreads
-	if (filter_type == 'b') {
+	if (filter_type == 'c') {
 		// Divide image into pixel columns
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
@@ -322,11 +322,11 @@ int main(int argc, char* argv[]) {
 			pthread_create(&threads[i], NULL, swiss_cheese, arg);
 		}
 
-		// Wait for threads to finish
+		// Wait for threads to finish and combine pixel columns
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			pthread_join(threads[i], NULL);
 		}
-	} else if (filter_type == 'c') {
+	} else if (filter_type == 'b') {
 		// Divide image into pixel columns
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
