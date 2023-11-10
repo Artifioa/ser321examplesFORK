@@ -75,7 +75,6 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 
 // Define the draw holes function
-// Define the draw holes function
 void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
     // Calculate the number of holes to be drawn based on the smallest side of the image
     int num_holes = round(0.08 * fmin(image_width, image_height));
@@ -86,8 +85,8 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 
     // Generate random x and y coordinates for each hole, ensuring that they are uniformly distributed along the x- and y-axis
     for (int i = 0; i < num_holes; i++) {
-        hole_centers[i][0] = round((i + 0.5) * image_width / num_holes);
-        hole_centers[i][1] = round((i + 0.5) * image_height / num_holes);
+        hole_centers[i][0] = rand() % image_width;
+        hole_centers[i][1] = rand() % image_height;
     }
 
     // Generate a random radius for each hole, ensuring that the average radius is most common and smaller or larger radii are less common
@@ -130,6 +129,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
     free(hole_centers);
     free(hole_radii);
 }
+
 
 
 // Define the Swiss cheese filter function
