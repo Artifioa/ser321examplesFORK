@@ -63,7 +63,7 @@ unsigned char* yellow_tint(unsigned char* pixel) {
     // Define the tinting values
     int red_tint = 30;
     int green_tint = 30;
-    int blue_tint = -20; 
+    int blue_tint = 0; 
 
     // Apply tinting, ensuring that the values don't exceed 255
     tinted_pixel[0] = (pixel[0] + red_tint <= 255) ? pixel[0] + red_tint : 255;
