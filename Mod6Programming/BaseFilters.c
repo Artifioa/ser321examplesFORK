@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
 	fclose(input_file);
 
 	// Apply the selected filter to the image data using pthreads
-	if (filter_type == 'c') {
+	if (filter_type == 'b') {
 		// Divide image into pixel columns
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
@@ -319,14 +319,14 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, blur_filter, arg);
+			pthread_create(&threads[i], NULL, swiss_cheese, arg);
 		}
 
-		// Wait for threads to finish and combine pixel columns
+		// Wait for threads to finish
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			pthread_join(threads[i], NULL);
 		}
-	} else if (filter_type == 'b') {
+	} else if (filter_type == 'c') {
 		// Divide image into pixel columns
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
