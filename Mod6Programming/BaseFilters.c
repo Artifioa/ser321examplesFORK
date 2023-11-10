@@ -79,7 +79,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
   srand(time(NULL)); // Initialize random seed
 	
   // Calculate the number of holes to be drawn based on the smallest side of the image
-  int num_holes = round(0.08 * fmin(image_width, image_height));
+  int num_holes = round(0.08 * image_width);
 	printf("num_holes: %d\n", num_holes);
 	printf("image_width: %d\n", image_width);
 	printf("image_height: %d\n", image_height);
@@ -290,6 +290,7 @@ int main(int argc, char* argv[]) {
 	// Apply the selected filter to the image data using pthreads
 	if (filter_type == 'c') {
 		// Divide image into pixel columns
+		printf("Image Height: %d\n", image_height);
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
 		int column_offsets[THREAD_COUNT];
