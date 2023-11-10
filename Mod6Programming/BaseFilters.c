@@ -75,20 +75,36 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 
 // Define the draw holes function
+// Define the draw holes function
 void draw_holes(unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
     srand(time(NULL)); // seed the random number generator
     int num_holes = round(0.08 * fmin(image_width, image_height)); // compute the number of holes
+
     for (int i = 0; i < num_holes; i++) {
         // generate random x and y coordinates within the image bounds
         int x = rand() % image_width;
         int y = rand() % image_height;
-        // set the pixel values to black (0, 0, 0) to represent a hole
-        int output_index = (y * image_width + x) * 3;
-        output_pixels[output_index] = 0;
-        output_pixels[output_index + 1] = 0;
-        output_pixels[output_index + 2] = 0;
+
+        // generate random radius that is normally distributed around the average radius
+        double radius = average_radius * (1 + 0.2 * ((double)rand() / RAND_MAX - 0.5));
+
+        // loop through the pixels in a square bounding box around the circle center
+        for (int j = fmax(0, y - radius); j < fmin(image_height, y + radius + 1); j++) {
+            for (int k = fmax(0, x - radius); k < fmin(image_width, x + radius + 1); k++) {
+                // check if the pixel is within the circle radius
+                double distance = sqrt(pow(k - x, 2) + pow(j - y, 2));
+                if (distance <= radius) {
+                    // set the pixel values to black (0, 0, 0) to represent a hole
+                    int output_index = (j * image_width + k) * 3;
+                    output_pixels[output_index] = 0;
+                    output_pixels[output_index + 1] = 0;
+                    output_pixels[output_index + 2] = 0;
+                }
+            }
+        }
     }
 }
+
 
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
