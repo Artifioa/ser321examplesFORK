@@ -76,7 +76,6 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 // Define the draw holes function
 void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
-  srand(time(NULL)); // Initialize random seed
 	
   // Calculate the number of holes to be drawn based on the smallest side of the image
   int num_holes = round(0.08 * fmin(image_width, image_height));
@@ -107,9 +106,9 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
 	// Define the average radius of the holes
-    int average_radius = round(0.08 * fmin(image_width, image_height));
+    //int average_radius = round(0.08 * fmin(image_width, image_height));
 	//Drawing holes
-	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
+	//draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
     // Loop through each pixel in the image
     for (int y = 0; y < image_height; y++) {
         for (int x = 0; x < image_width; x++) {
@@ -151,8 +150,7 @@ void* swiss_cheese_thread(void* arg) {
     if (thread_index == THREAD_COUNT - 1) {
         row_end += row_remainder;
     }
-	printf("Image dimensions 3: %dx%d pixels\n", image_width, image_height);
-
+	
 	draw_holes(input_pixels, output_pixels, image_width, image_height, round(0.08 * fmin(image_width, image_height)));
 
     // Call the swiss_cheese() function for each row
@@ -242,7 +240,10 @@ void* blur_filter(void* arg) {
 }
 
 int main(int argc, char* argv[]) {
+	srand(time(NULL)); // Initialize random seed
+	
 	// Read command line arguments
+	
 	char* input_file_name;
 	char* output_file_name;
 	char filter_type;
