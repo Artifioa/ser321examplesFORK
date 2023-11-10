@@ -194,113 +194,64 @@ void* blur_filter(void* arg) {
 
 // Define the Swiss cheese filter function
 void* cheese_filter(void* arg) {
-	// Get the thread index
-	int thread_index = *(int*)arg;
+	// Cast the argument to the correct type
+	unsigned char* input_pixels = ((unsigned char**)arg)[0];
+	unsigned char* output_pixels = ((unsigned char**)arg)[1];
+	int image_width = *((int*)arg[2]);
+	int image_height = *((int*)arg[3]);
 	free(arg);
 
-	// Calculate the column range for this thread
-	int column_width = image_width / THREAD_COUNT;
-	int column_remainder = image_width % THREAD_COUNT;
-	int column_start = thread_index * column_width;
-	int column_end = (thread_index + 1) * column_width;
-	if (thread_index == THREAD_COUNT - 1) {
-		column_end += column_remainder;
+	// Allocate memory for the pixel data array
+	unsigned char* pixel_data = (unsigned char*)malloc(image_height * image_width * 3);
+	if (pixel_data == NULL) {
+		printf("Error: could not allocate memory for pixel data array\n");
+		pthread_exit(NULL);
 	}
 
-	// Define the average radius of the holes
-	int average_radius = round(0.08 * fmin(image_width, image_height));
-
-	// Loop through each pixel in the column range
-	for (int x = column_start; x < column_end; x++) {
+	// Tint the image towards being slightly yellow
+	for (int x = 0; x < image_width; x++) {
 		for (int y = 0; y < image_height; y++) {
-			// Calculate the index of the current pixel in the input pixel array
 			int input_index = (y * image_width + x) * 3;
-
-			// Apply the yellow tint to the pixel
-			unsigned char* tinted_pixel = (unsigned char*)malloc(3);
-			tinted_pixel[0] = input_pixels[input_index] + 50;
-			tinted_pixel[1] = input_pixels[input_index + 1] + 50;
-			tinted_pixel[2] = input_pixels[input_index + 2];
-
-			// Calculate the index of the current pixel in the output pixel array
-			int output_index = (y * image_width + x) * 3;
-
-			// Check if the pixel is within any of the holes
-			int is_within_hole = 0;
-			for (int i = 0; i < num_holes; i++) {
-				// Get the x and y coordinates and radius of the current hole
-				int hole_x = hole_centers[i][0];
-				int hole_y = hole_centers[i][1];
-				double hole_radius = hole_radii[i];
-
-				// Check if the pixel is within the hole radius
-				double distance = sqrt(pow(x - hole_x, 2) + pow(y - hole_y, 2));
-				if (distance <= hole_radius) {
-					is_within_hole = 1;
-					break;
-				}
-			}
-
-			// If the pixel is not within any of the holes, store the tinted pixel in the output pixel array
-			if (is_within_hole == 0) {
-				output_pixels[output_index] = tinted_pixel[0];
-				output_pixels[output_index + 1] = tinted_pixel[1];
-				output_pixels[output_index + 2] = tinted_pixel[2];
-			} else {
-				// If the pixel is within a hole, check if it is within the average radius of the hole
-				int is_within_average_radius = 0;
-				for (int i = 0; i < num_holes; i++) {
-					// Get the x and y coordinates and radius of the current hole
-					int hole_x = hole_centers[i][0];
-					int hole_y = hole_centers[i][1];
-					double hole_radius = hole_radii[i];
-
-					// Check if the pixel is within the average radius of the hole
-					double distance = sqrt(pow(x - hole_x, 2) + pow(y - hole_y, 2));
-					if (distance <= average_radius) {
-						is_within_average_radius = 1;
-						break;
-					}
-				}
-
-				// If the pixel is within the average radius of the hole, store the tinted pixel in the output pixel array
-				if (is_within_average_radius == 1) {
-					output_pixels[output_index] = tinted_pixel[0];
-					output_pixels[output_index + 1] = tinted_pixel[1];
-					output_pixels[output_index + 2] = tinted_pixel[2];
-				}
-			}
-
-			// Free the memory allocated for the tinted pixel
-			free(tinted_pixel);
+			int output_index = input_index;
+			pixel_data[output_index] = input_pixels[input_index] + 20;
+			pixel_data[output_index + 1] = input_pixels[input_index + 1] + 10;
+			pixel_data[output_index + 2] = input_pixels[input_index + 2];
 		}
 	}
 
 	// Randomly draw black circles in the image
-	for (int i = 0; i < num_holes; i++) {
-		// Get the x and y coordinates and radius of the current hole
-		int hole_x = hole_centers[i][0];
-		int hole_y = hole_centers[i][1];
-		double hole_radius = hole_radii[i];
+	int hole_count = (int)(fmin(image_width, image_height) * 0.08);
+	int hole_radius = (int)(fmin(image_width, image_height) * 0.08);
+	srand(time(NULL));
+	for (int i = 0; i < hole_count; i++) {
+		// Generate random coordinates for the center of the hole
+		int center_x = rand() % image_width;
+		int center_y = rand() % image_height;
 
-		// Loop through each pixel in the image
-		for (int x = 0; x < image_width; x++) {
-			for (int y = 0; y < image_height; y++) {
-				// Calculate the index of the current pixel in the output pixel array
-				int output_index = (y * image_width + x) * 3;
+		// Generate a random radius for the hole
+		int radius = (int)(hole_radius * (0.5 + ((double)rand() / RAND_MAX)));
 
-				// Check if the pixel is within the hole radius
-				double distance = sqrt(pow(x - hole_x, 2) + pow(y - hole_y, 2));
-				if (distance <= hole_radius) {
-					// Set the pixel to black
-					output_pixels[output_index] = 0;
-					output_pixels[output_index + 1] = 0;
-					output_pixels[output_index + 2] = 0;
+		// Draw the hole
+		for (int x = center_x - radius; x <= center_x + radius; x++) {
+			for (int y = center_y - radius; y <= center_y + radius; y++) {
+				if (x >= 0 && x < image_width && y >= 0 && y < image_height) {
+					int distance = (int)sqrt(pow(x - center_x, 2) + pow(y - center_y, 2));
+					if (distance <= radius) {
+						int output_index = (y * image_width + x) * 3;
+						pixel_data[output_index] = 0;
+						pixel_data[output_index + 1] = 0;
+						pixel_data[output_index + 2] = 0;
+					}
 				}
 			}
 		}
 	}
 
+	// Copy the modified pixel data to the output pixel array
+	memcpy(output_pixels, pixel_data, image_height * image_width * 3);
+
+	// Free memory
+	free(pixel_data);
 	pthread_exit(NULL);
 }
 
