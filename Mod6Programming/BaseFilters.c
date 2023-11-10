@@ -75,31 +75,29 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 
 // Define the draw holes function
-void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
-	
-  // Calculate the number of holes to be drawn based on the smallest side of the image
-  int num_holes = round(0.08 * fmin(image_width, image_height));
+void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int row_start, int row_end, int average_radius) {
+    // Calculate the number of holes to be drawn based on the smallest side of the image
+    int num_holes = round(0.08 * fmin(image_width, row_end - row_start));
 
-	
-  // Loop over each hole
-  for (int i = 0; i < num_holes; i++) {
-    // Generate a random center for the hole
-    int x_center = rand() % image_width;
-    int y_center = rand() % image_height;
+    // Loop over each hole
+    for (int i = 0; i < num_holes; i++) {
+        // Generate a random center for the hole
+        int x_center = rand() % image_width;
+        int y_center = row_start + rand() % (row_end - row_start);
 
-    // Generate a random radius for the hole
-    double radius = average_radius * ((double)rand() / RAND_MAX);
+        // Generate a random radius for the hole
+        double radius = average_radius * ((double)rand() / RAND_MAX);
 
-    // Draw a black filled circle at the center with the given radius
-    for (int y = 0; y < image_height; y++) {
-      for (int x = 0; x < image_width; x++) {
-        if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
-          int output_index = (y * image_width + x) * 3;
-          memset(&output_pixels[output_index], 0, 3);
+        // Draw a black filled circle at the center with the given radius
+        for (int y = row_start; y < row_end; y++) {
+            for (int x = 0; x < image_width; x++) {
+                if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
+                    int output_index = (y * image_width + x) * 3;
+                    memset(&output_pixels[output_index], 0, 3);
+                }
+            }
         }
-      }
     }
-  }
 }
 
 
@@ -151,7 +149,7 @@ void* swiss_cheese_thread(void* arg) {
         row_end += row_remainder;
     }
 	
-	draw_holes(input_pixels, output_pixels, image_width, image_height, round(0.08 * fmin(image_width, image_height)));
+	draw_holes(input_pixels, output_pixels, image_width, row_start, row_end, round(0.08 * fmin(image_width, image_height)));
 
     // Call the swiss_cheese() function for each row
     for (int y = row_start; y < row_end; y++) {
@@ -241,7 +239,7 @@ void* blur_filter(void* arg) {
 
 int main(int argc, char* argv[]) {
 	srand(time(NULL)); // Initialize random seed
-	
+
 	// Read command line arguments
 	
 	char* input_file_name;
