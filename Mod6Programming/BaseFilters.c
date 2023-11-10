@@ -97,6 +97,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
         if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
           int output_index = (y * image_width + x) * 3;
           memset(&output_pixels[output_index], 0, 3);
+			printf("output_index: %d\n", output_index);
         }
       }
     }
@@ -107,7 +108,6 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
 	// Define the average radius of the holes
-	printf("Image dimensions 4: %dx%d pixels\n", image_width, image_height);
     int average_radius = round(0.08 * fmin(image_width, image_height));
 	//Drawing holes
 	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
@@ -153,10 +153,12 @@ void* swiss_cheese_thread(void* arg) {
         row_end += row_remainder;
     }
 	printf("Image dimensions 3: %dx%d pixels\n", image_width, image_height);
+	
+	draw_holes(input_pixels, output_pixels, image_width, image_height, round(0.08 * fmin(image_width, image_height)));
 
     // Call the swiss_cheese() function for each row
     for (int y = row_start; y < row_end; y++) {
-        swiss_cheese(input_pixels, output_pixels, image_width, image_height);
+        swiss_cheese(input_pixels + y * image_width * 3, output_pixels + y * image_width * 3, image_width, image_height);
     }
 
     // Exit the thread
