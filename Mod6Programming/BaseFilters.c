@@ -153,12 +153,12 @@ void* swiss_cheese_thread(void* arg) {
         row_end += row_remainder;
     }
 	printf("Image dimensions 3: %dx%d pixels\n", image_width, image_height);
-	
+
 	draw_holes(input_pixels, output_pixels, image_width, image_height, round(0.08 * fmin(image_width, image_height)));
 
     // Call the swiss_cheese() function for each row
     for (int y = row_start; y < row_end; y++) {
-        swiss_cheese(input_pixels + y * image_width * 3, output_pixels + y * image_width * 3, image_width, image_height);
+        swiss_cheese(input_pixels, output_pixels, image_width, image_height);
     }
 
     // Exit the thread
