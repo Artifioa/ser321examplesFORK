@@ -51,7 +51,7 @@
 
 #include <math.h>
 #include <time.h>
-/*
+
 // Define the yellow tint function
 unsigned char* yellow_tint(unsigned char* pixel) {
 	unsigned char* tinted_pixel = malloc(3 * sizeof(unsigned char));
@@ -113,7 +113,7 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
         }
     }
 }
-*/
+
 ////////////////////////////////////////////////////////////////////////////////
 //MAIN PROGRAM CODE
 // Define the box blur filter function
@@ -191,7 +191,7 @@ void* blur_filter(void* arg) {
 	free(pixel_data);
 	pthread_exit(NULL);
 }
-
+/*
 // Define the Swiss cheese filter function
 void* cheese_filter(void* arg) {
 	// Cast the argument to the correct type
@@ -255,7 +255,7 @@ void* cheese_filter(void* arg) {
 	free(pixel_data);
 	pthread_exit(NULL);
 }
-
+*/
 int main(int argc, char* argv[]) {
 	// Read command line arguments
 	char* input_file_name;
@@ -317,7 +317,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, cheese_filter, arg);
+			pthread_create(&threads[i], NULL, swiss_cheese, arg);
 		}
 
 		// Wait for threads to finish and combine pixel columns
