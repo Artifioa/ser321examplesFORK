@@ -76,6 +76,7 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 // Define the draw holes function
 void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
+  printf("did it get to draw holes\n");
   srand(time(NULL)); // Initialize random seed
 
   // Calculate the number of holes to be drawn based on the smallest side of the image
@@ -86,7 +87,8 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
     // Generate a random center for the hole
     int x_center = rand() % image_width;
     int y_center = rand() % image_height;
-
+	printf("x_center: %d\n", x_center);
+	printf("y_center: %d\n", y_center);
     // Generate a random radius for the hole
     double radius = average_radius * ((double)rand() / RAND_MAX);
 
@@ -96,6 +98,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
         if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
           int output_index = (y * image_width + x) * 3;
           memset(&output_pixels[output_index], 0, 3);
+			printf("output_index: %d\n", output_index);
         }
       }
     }
