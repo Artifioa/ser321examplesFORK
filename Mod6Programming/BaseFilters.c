@@ -76,60 +76,56 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 // Define the draw holes function
 void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
-    // Calculate the number of holes to be drawn based on the smallest side of the image
-    int num_holes = round(0.08 * fmin(image_width, image_height));
+  // Generate a random offset for the x and y center of each hole
+  int x_offset = rand() % image_width;
+  int y_offset = rand() % image_height;
 
-    // Allocate memory for the hole centers and radii
-    int (*hole_centers)[2] = malloc(num_holes * sizeof(int[2]));
-    double* hole_radii = malloc(num_holes * sizeof(double));
+  // Calculate the number of holes to be drawn based on the smallest side of the image
+  int num_holes = round(0.08 * fmin(image_width, image_height));
 
-    // Generate random x and y coordinates for each hole, ensuring that they are uniformly distributed along the x- and y-axis
-    for (int i = 0; i < num_holes; i++) {
-        hole_centers[i][0] = rand() % image_width;
-        hole_centers[i][1] = rand() % image_height;
+  // Allocate memory for the hole centers and radii
+  int (*hole_centers)[2] = malloc(num_holes * sizeof(int[2]));
+  double* hole_radii = malloc(num_holes * sizeof(double));
+
+  // Generate random x and y coordinates for each hole, ensuring that they are uniformly distributed throughout the image
+  for (int i = 0; i < num_holes; i++) {
+    hole_centers[i][0] = rand() % image_width + x_offset;
+    hole_centers[i][1] = rand() % image_height + y_offset;
+  }
+
+  // Generate a random radius for each hole, ensuring that the average radius is most common and smaller or larger radii are less common
+  srand(time(NULL));
+  for (int i = 0; i < num_holes; i++) {
+    double r = ((double)rand() / RAND_MAX);
+    if (r < 0.5) {
+      hole_radii[i] = average_radius * sqrt(r * 2);
+    } else {
+      hole_radii[i] = average_radius / sqrt((1 - r) * 2);
     }
+  }
 
-    // Generate a random radius for each hole, ensuring that the average radius is most common and smaller or larger radii are less common
-    srand(time(NULL));
-    for (int i = 0; i < num_holes; i++) {
-        double r = ((double)rand() / RAND_MAX);
-        if (r < 0.5) {
-            hole_radii[i] = average_radius * sqrt(r * 2);
+  // Draw a black filled circle at each x and y coordinate with the given radius
+  for (int i = 0; i < num_holes; i++) {
+    int x_center = hole_centers[i][0];
+    int y_center = hole_centers[i][1];
+    double radius = hole_radii[i];
+
+    for (int y = 0; y < image_height; y++) {
+      for (int x = 0; x < image_width; x++) {
+        int output_index = (y * image_width + x) * 3;
+        if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
+          output_pixels[output_index] = 0;
+          output_pixels[output_index + 1] = 0;
+          output_pixels[output_index + 2] = 0;
         }
-        else {
-            hole_radii[i] = average_radius / sqrt((1 - r) * 2);
-        }
+      }
     }
+  }
 
-    // Copy the input image to the output image
-    memcpy(output_pixels, input_pixels, image_width * image_height * 3);
-
-    // Draw a black circle with the generated radius at each x and y coordinate
-    for (int i = 0; i < num_holes; i++) {
-        int x_center = hole_centers[i][0];
-        int y_center = hole_centers[i][1];
-        double radius = hole_radii[i];
-
-        for (int y = 0; y < image_height; y++) {
-            for (int x = 0; x < image_width; x++) {
-                int output_index = (y * image_width + x) * 3;
-
-                // Check if the current pixel is within the circle
-                if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
-                    // Set the pixel to black
-                    output_pixels[output_index] = 0;
-                    output_pixels[output_index + 1] = 0;
-                    output_pixels[output_index + 2] = 0;
-                }
-            }
-        }
-    }
-
-    // Free the memory allocated for the hole centers and radii
-    free(hole_centers);
-    free(hole_radii);
+  // Free the memory allocated for the hole centers and radii
+  free(hole_centers);
+  free(hole_radii);
 }
-
 
 
 // Define the Swiss cheese filter function
@@ -139,7 +135,6 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
 	//Drawing holes
 	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
     // Loop through each pixel in the image
-	/*
     for (int y = 0; y < image_height; y++) {
         for (int x = 0; x < image_width; x++) {
             // Calculate the index of the current pixel in the input and output pixel arrays
@@ -161,7 +156,7 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
 				return;
             }
         }
-    }*/
+    }
 
 }
 
