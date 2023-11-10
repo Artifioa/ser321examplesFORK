@@ -77,11 +77,12 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 				// check if the pixel is within the circle radius
 				double distance = sqrt(pow(k - x, 2) + pow(j - y, 2));
 				if (distance <= radius) {
-					// set the pixel values to black
+					// set the pixel values to the original input pixel values
+					int input_index = (j * image_width + k) * 3;
 					int output_index = (j * image_width + k) * 3;
-					output_pixels[output_index] = 0;
-					output_pixels[output_index + 1] = 0;
-					output_pixels[output_index + 2] = 0;
+					output_pixels[output_index] = input_pixels[input_index];
+					output_pixels[output_index + 1] = input_pixels[input_index + 1];
+					output_pixels[output_index + 2] = input_pixels[input_index + 2];
 				}
 			}
 		}
