@@ -139,6 +139,7 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
 	//Drawing holes
 	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
     // Loop through each pixel in the image
+	/*
     for (int y = 0; y < image_height; y++) {
         for (int x = 0; x < image_width; x++) {
             // Calculate the index of the current pixel in the input and output pixel arrays
@@ -160,7 +161,7 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
 				return;
             }
         }
-    }
+    }*/
 
 }
 
@@ -265,71 +266,7 @@ void* blur_filter(void* arg) {
 	free(pixel_data);
 	pthread_exit(NULL);
 }
-/*
-// Define the Swiss cheese filter function
-void* cheese_filter(void* arg) {
-	// Cast the argument to the correct type
-	void** args = (void**)arg;
-	input_pixels = (unsigned char*)args[0];
-	output_pixels = (unsigned char*)args[1];
-	image_width = *((int*)args[2]);
-	image_height = *((int*)args[3]);
-	free(arg);
 
-	// Allocate memory for the pixel data array
-	unsigned char* pixel_data = (unsigned char*)malloc(image_height * image_width * 3);
-	if (pixel_data == NULL) {
-		printf("Error: could not allocate memory for pixel data array\n");
-		pthread_exit(NULL);
-	}
-
-	// Tint the image towards being slightly yellow
-	for (int x = 0; x < image_width; x++) {
-		for (int y = 0; y < image_height; y++) {
-			int input_index = (y * image_width + x) * 3;
-			int output_index = input_index;
-			pixel_data[output_index] = input_pixels[input_index] + 20;
-			pixel_data[output_index + 1] = input_pixels[input_index + 1] + 10;
-			pixel_data[output_index + 2] = input_pixels[input_index + 2];
-		}
-	}
-
-	// Randomly draw black circles in the image
-	int hole_count = (int)(fmin(image_width, image_height) * 0.08);
-	int hole_radius = (int)(fmin(image_width, image_height) * 0.08);
-	srand(time(NULL));
-	for (int i = 0; i < hole_count; i++) {
-		// Generate random coordinates for the center of the hole
-		int center_x = rand() % image_width;
-		int center_y = rand() % image_height;
-
-		// Generate a random radius for the hole
-		int radius = (int)(hole_radius * (0.5 + ((double)rand() / RAND_MAX)));
-
-		// Draw the hole
-		for (int x = center_x - radius; x <= center_x + radius; x++) {
-			for (int y = center_y - radius; y <= center_y + radius; y++) {
-				if (x >= 0 && x < image_width && y >= 0 && y < image_height) {
-					int distance = (int)sqrt(pow(x - center_x, 2) + pow(y - center_y, 2));
-					if (distance <= radius) {
-						int output_index = (y * image_width + x) * 3;
-						pixel_data[output_index] = 0;
-						pixel_data[output_index + 1] = 0;
-						pixel_data[output_index + 2] = 0;
-					}
-				}
-			}
-		}
-	}
-
-	// Copy the modified pixel data to the output pixel array
-	memcpy(output_pixels, pixel_data, image_height * image_width * 3);
-
-	// Free memory
-	free(pixel_data);
-	pthread_exit(NULL);
-}
-*/
 int main(int argc, char* argv[]) {
 	// Read command line arguments
 	char* input_file_name;
