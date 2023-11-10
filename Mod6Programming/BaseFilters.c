@@ -85,17 +85,16 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 		// generate random radius that is normally distributed around the average radius
 		double radius = average_radius * (1 + 0.2 * ((double)rand() / RAND_MAX - 0.5));
 		// loop through the pixels in a square bounding box around the circle center
-		for (int j = fmax(0, y - radius); j < fmin(image_height, y + radius +1); j++) {
-			for (int k = fmax(0, x - radius); k < fmin(image_width, x + radius +1); k++) {
+		for (int j = fmax(0, y - radius); j < fmin(image_height, y + radius + 1); j++) {
+			for (int k = fmax(0, x - radius); k < fmin(image_width, x + radius + 1); k++) {
 				// check if the pixel is within the circle radius
 				double distance = sqrt(pow(k - x, 2) + pow(j - y, 2));
 				if (distance <= radius) {
-					// set the pixel values to the original input pixel values
-					int input_index = (j * image_width + k) * 3;
+					// set the pixel values to black (0, 0, 0) to represent a hole
 					int output_index = (j * image_width + k) * 3;
-					output_pixels[output_index] = input_pixels[input_index];
-					output_pixels[output_index + 1] = input_pixels[input_index + 1];
-					output_pixels[output_index + 2] = input_pixels[input_index + 2];
+					output_pixels[output_index] = 0;
+					output_pixels[output_index + 1] = 0;
+					output_pixels[output_index + 2] = 0;
 				}
 			}
 		}
@@ -104,7 +103,10 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
-
+	// Define the average radius of the holes
+    int average_radius = round(0.08 * fmin(image_width, image_height));
+	//Drawing holes
+	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
     // Loop through each pixel in the image
     for (int y = 0; y < image_height; y++) {
         for (int x = 0; x < image_width; x++) {
@@ -129,10 +131,6 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
         }
     }
 
-	// Define the average radius of the holes
-    int average_radius = round(0.08 * fmin(image_width, image_height));
-	//Drawing holes
-	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
 }
 
 
