@@ -195,10 +195,11 @@ void* blur_filter(void* arg) {
 // Define the Swiss cheese filter function
 void* cheese_filter(void* arg) {
 	// Cast the argument to the correct type
-	input_pixels = ((unsigned char**)arg)[0];
-	output_pixels = ((unsigned char**)arg)[1];
-	image_width = *((int*)arg[2]);
-	image_height = *((int*)arg[3]);
+	void** args = (void**)arg;
+	input_pixels = (unsigned char*)args[0];
+	output_pixels = (unsigned char*)args[1];
+	image_width = *((int*)args[2]);
+	image_height = *((int*)args[3]);
 	free(arg);
 
 	// Allocate memory for the pixel data array
