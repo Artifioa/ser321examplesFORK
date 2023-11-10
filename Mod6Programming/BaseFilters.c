@@ -54,16 +54,25 @@
 
 // Define the yellow tint function
 unsigned char* yellow_tint(unsigned char* pixel) {
-	unsigned char* tinted_pixel = malloc(3 * sizeof(unsigned char));
-	if (tinted_pixel == NULL) {
-		// Handle memory allocation error
-		return NULL;
-	}
-	tinted_pixel[0] = pixel[0] + 20; // increase red value
-	tinted_pixel[1] = pixel[1] + 20; // increase green value
-	tinted_pixel[2] = pixel[2]; // keep blue value the same
-	return tinted_pixel;
+    unsigned char* tinted_pixel = malloc(3 * sizeof(unsigned char));
+    if (tinted_pixel == NULL) {
+        // Handle memory allocation error
+        return NULL;
+    }
+
+    // Define the tinting values
+    int red_tint = 20;
+    int green_tint = 20;
+    int blue_tint = 0;  // No tint on the blue channel
+
+    // Apply tinting, ensuring that the values don't exceed 255
+    tinted_pixel[0] = (pixel[0] + red_tint <= 255) ? pixel[0] + red_tint : 255;
+    tinted_pixel[1] = (pixel[1] + green_tint <= 255) ? pixel[1] + green_tint : 255;
+    tinted_pixel[2] = (pixel[2] + blue_tint <= 255) ? pixel[2] + blue_tint : 255;
+
+    return tinted_pixel;
 }
+
 
 // Define the draw holes function
 void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
