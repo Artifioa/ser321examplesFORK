@@ -61,8 +61,8 @@ unsigned char* yellow_tint(unsigned char* pixel) {
     }
 
     // Define the tinting values
-    int red_tint = 30;
-    int green_tint = 30;
+    int red_tint = 60;
+    int green_tint = 60;
     int blue_tint = 0;  // No tint on the blue channel
 
     // Apply tinting, ensuring that the values don't exceed 255
@@ -83,7 +83,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
     for (int i = 0; i < num_holes; i++) {
         // Generate a random center for the hole
         int x_center = average_radius + rand() % (image_width - 2 * average_radius);
-        int y_center = row_start + average_radius + rand() % (row_end - row_start - 2 * average_radius);
+        int y_center = row_start + 2 * average_radius + rand() % (row_end - row_start - 4 * average_radius);
 
         // Generate a random radius for the hole
         double radius = average_radius * ((double)rand() / RAND_MAX);
