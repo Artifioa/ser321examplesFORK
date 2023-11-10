@@ -51,7 +51,7 @@
 
 #include <math.h>
 #include <time.h>
-
+/*
 // Define the yellow tint function
 unsigned char* yellow_tint(unsigned char* pixel) {
 	unsigned char* tinted_pixel = malloc(3 * sizeof(unsigned char));
@@ -90,7 +90,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 }
 
 // Define the Swiss cheese filter function
-void* swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
+void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
     // Define the average radius of the holes
     int average_radius = round(0.08 * fmin(image_width, image_height));
     draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
@@ -113,7 +113,7 @@ void* swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, in
         }
     }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 //MAIN PROGRAM CODE
 // Define the box blur filter function
@@ -192,7 +192,6 @@ void* blur_filter(void* arg) {
 	pthread_exit(NULL);
 }
 
-/*
 // Define the Swiss cheese filter function
 void* cheese_filter(void* arg) {
 	// Get the thread index
@@ -256,7 +255,6 @@ void* cheese_filter(void* arg) {
 
 	pthread_exit(NULL);
 }
-*/
 
 int main(int argc, char* argv[]) {
 	// Read command line arguments
@@ -319,7 +317,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, swiss_cheese, arg);
+			pthread_create(&threads[i], NULL, cheese_filter, arg);
 		}
 
 		// Wait for threads to finish and combine pixel columns
