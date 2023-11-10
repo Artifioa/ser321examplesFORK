@@ -93,8 +93,6 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
 	// Define the average radius of the holes
 	int average_radius = round(0.08 * fmin(image_width, image_height));
-	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
-	// Loop through each pixel in the image
 
 	// Draw the holes in the output image
 
@@ -352,4 +350,4 @@ int main(int argc, char* argv[]) {
 	free(output_pixels);
 
 	return 0;
-}scp -i /path/to/key.pem /path/to/local/file user@ec2-xx-xx-xxx-xxx.compute-1.amazonaws.com:/path/to/remote/file
+}
