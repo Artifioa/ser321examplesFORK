@@ -149,13 +149,14 @@ void* swiss_cheese_thread(void* arg) {
         row_end += row_remainder;
     }
 	
-	draw_holes(input_pixels, output_pixels, image_width, row_start, row_end, round(0.08 * fmin(image_width, image_height)));
+	
 
     // Call the swiss_cheese() function for each row
     for (int y = row_start; y < row_end; y++) {
         swiss_cheese(input_pixels, output_pixels, image_width, image_height);
     }
-
+	
+	draw_holes(input_pixels, output_pixels, image_width, row_start, row_end, round(0.08 * fmin(image_width, image_height)));
     // Exit the thread
     pthread_exit(NULL);
 }
