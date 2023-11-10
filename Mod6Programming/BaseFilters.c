@@ -325,7 +325,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, swiss_cheese, arg);
+			pthread_create(&threads[i], NULL, blur_filter, arg);
 		}
 
 		// Wait for threads to finish
