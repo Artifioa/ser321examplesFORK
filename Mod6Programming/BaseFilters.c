@@ -148,15 +148,23 @@ void* swiss_cheese_thread(void* arg) {
     if (thread_index == THREAD_COUNT - 1) {
         row_end += row_remainder;
     }
-	
-	
+
+    // Add an overlap to the row range
+    int overlap = round(0.08 * fmin(image_width, image_height));
+    if (thread_index != 0) {
+        row_start -= overlap;
+    }
+    if (thread_index != THREAD_COUNT - 1) {
+        row_end += overlap;
+    }
 
     // Call the swiss_cheese() function for each row
     for (int y = row_start; y < row_end; y++) {
         swiss_cheese(input_pixels, output_pixels, image_width, image_height);
     }
-	
-	draw_holes(input_pixels, output_pixels, image_width, row_start, row_end, round(0.08 * fmin(image_width, image_height)));
+
+    draw_holes(input_pixels, output_pixels, image_width, row_start, row_end, round(0.08 * fmin(image_width, image_height)));
+
     // Exit the thread
     pthread_exit(NULL);
 }
