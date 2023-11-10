@@ -48,7 +48,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //IMAGE FILTER FUNCTIONS
-/*
+
 #include <math.h>
 #include <time.h>
 
@@ -113,52 +113,6 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
 	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
 }
 
-
-void box_blur(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
-	// Define the size of the neighborhood
-	int neighborhood_size = 3;
-	int neighborhood_radius = neighborhood_size / 2;
-
-	// Loop through each pixel in the image
-	for (int y = 0; y < image_height; y++) {
-		for (int x = 0; x < image_width; x++) {
-			// Initialize the sum of pixel values in the neighborhood
-			int sum_red = 0;
-			int sum_green = 0;
-			int sum_blue = 0;
-			int count = 0;
-
-			// Loop through each pixel in the neighborhood
-			for (int j = -neighborhood_radius; j <= neighborhood_radius; j++) {
-				for (int i = -neighborhood_radius; i <= neighborhood_radius; i++) {
-					// Calculate the coordinates of the current pixel in the neighborhood
-					int neighbor_x = x + i;
-					int neighbor_y = y + j;
-
-					// Check if the current pixel is within the bounds of the image
-					if (neighbor_x >= 0 && neighbor_x < image_width && neighbor_y >= 0 && neighbor_y < image_height) {
-						// Calculate the index of the current pixel in the input pixel array
-						int input_index = (neighbor_y * image_width + neighbor_x) * 3;
-
-						// Add the pixel values to the sum
-						sum_red += input_pixels[input_index];
-						sum_green += input_pixels[input_index + 1];
-						sum_blue += input_pixels[input_index + 2];
-						count++;
-					}
-				}
-			}
-
-			// Calculate the average pixel value in the neighborhood
-			int output_index = (y * image_width + x) * 3;
-			output_pixels[output_index] = sum_red / count;
-			output_pixels[output_index + 1] = sum_green / count;
-			output_pixels[output_index + 2] = sum_blue / count;
-		}
-	}
-}
-
-*/
 ////////////////////////////////////////////////////////////////////////////////
 //MAIN PROGRAM CODE
 // Define the box blur filter function
@@ -237,6 +191,7 @@ void* blur_filter(void* arg) {
 	pthread_exit(NULL);
 }
 
+/*
 // Define the Swiss cheese filter function
 void* cheese_filter(void* arg) {
 	// Get the thread index
@@ -300,6 +255,7 @@ void* cheese_filter(void* arg) {
 
 	pthread_exit(NULL);
 }
+*/
 
 int main(int argc, char* argv[]) {
 	// Read command line arguments
@@ -370,18 +326,6 @@ int main(int argc, char* argv[]) {
 			pthread_join(threads[i], NULL);
 		}
 	} else if (filter_type == 'c') {
-		// Compute the number of holes and their centers and radii
-		num_holes = round(0.08 * fmin(image_width, image_height));
-		hole_centers = (int(*)[2])malloc(num_holes * sizeof(int[2]));
-		hole_radii = (double*)malloc(num_holes * sizeof(double));
-		for (int i = 0; i < num_holes; i++) {
-			// Generate random x and y coordinates within the image bounds
-			hole_centers[i][0] = rand() % image_width;
-			hole_centers[i][1] = rand() % image_height;
-			// Generate random radius that is normally distributed around the average radius
-			hole_radii[i] = average_radius * (1 + 0.2 * ((double)rand() / RAND_MAX - 0.5));
-		}
-
 		// Divide image into pixel columns
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
@@ -396,17 +340,13 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, cheese_filter, arg);
+			pthread_create(&threads[i], NULL, swiss_cheese, arg);
 		}
 
 		// Wait for threads to finish
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			pthread_join(threads[i], NULL);
 		}
-
-		// Free memory
-		free(hole_centers);
-		free(hole_radii);
 	}
 
 	// Write modified pixel data to output file
