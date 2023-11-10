@@ -271,6 +271,7 @@ void* cheese_filter(void* arg) {
 			int output_index = (y * image_width + x) * 3;
 
 			// Check if the pixel is within any of the holes
+			bool is_within_hole = false;
 			for (int i = 0; i < num_holes; i++) {
 				// Get the x and y coordinates and radius of the current hole
 				int hole_x = hole_centers[i][0];
@@ -280,16 +281,13 @@ void* cheese_filter(void* arg) {
 				// Check if the pixel is within the hole radius
 				double distance = sqrt(pow(x - hole_x, 2) + pow(y - hole_y, 2));
 				if (distance <= hole_radius) {
-					// Set the pixel values to black
-					output_pixels[output_index] = 0;
-					output_pixels[output_index + 1] = 0;
-					output_pixels[output_index + 2] = 0;
+					is_within_hole = true;
 					break;
 				}
 			}
 
 			// If the pixel is not within any of the holes, store the tinted pixel in the output pixel array
-			if (output_pixels[output_index] != 0 || output_pixels[output_index + 1] != 0 || output_pixels[output_index + 2] != 0) {
+			if (!is_within_hole) {
 				output_pixels[output_index] = tinted_pixel[0];
 				output_pixels[output_index + 1] = tinted_pixel[1];
 				output_pixels[output_index + 2] = tinted_pixel[2];
