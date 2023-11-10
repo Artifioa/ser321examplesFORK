@@ -92,35 +92,11 @@ void draw_holes(unsigned char* output_pixels, int image_width, int image_height,
 
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
-	// Define the average radius of the holes
-    int average_radius = round(0.08 * fmin(image_width, image_height));
-	//Drawing holes
-	draw_holes(output_pixels, image_width, image_height, round(0.08 * fmin(image_width, image_height)));
+    // Initialize output_pixels with the input_pixels
+    memcpy(output_pixels, input_pixels, image_width * image_height * 3);
 
-    // Loop through each pixel in the image
-    for (int y = 0; y < image_height; y++) {
-        for (int x = 0; x < image_width; x++) {
-            // Calculate the index of the current pixel in the input and output pixel arrays
-            int input_index = (y * image_width + x) * 3;
-            int output_index = (y * image_width + x) * 3;
-
-            // Apply the yellow tint to the original input pixel values and store in the output pixel array
-            unsigned char* tinted_pixel = yellow_tint(&input_pixels[input_index]);
-            if (tinted_pixel != NULL) {
-                output_pixels[output_index] = tinted_pixel[0];
-                output_pixels[output_index + 1] = tinted_pixel[1];
-                output_pixels[output_index + 2] = tinted_pixel[2];
-
-                // Free the memory allocated for the tinted pixel
-                free(tinted_pixel);
-            } else {
-                // Handle error when memory allocation fails
-                printf("Error: Memory allocation failed in yellow_tint\n");
-				return;
-            }
-        }
-    }
-
+    // Draw holes on the output image
+    draw_holes(output_pixels, image_width, image_height, round(0.08 * fmin(image_width, image_height)));
 }
 
 
