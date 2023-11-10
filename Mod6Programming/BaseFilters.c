@@ -79,18 +79,15 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
   srand(time(NULL)); // Initialize random seed
 	
   // Calculate the number of holes to be drawn based on the smallest side of the image
-  int num_holes = round(0.08 * image_width);
-	printf("num_holes: %d\n", num_holes);
-	printf("image_width: %d\n", image_width);
-	printf("image_height: %d\n", image_height);
+  int num_holes = round(0.08 * fmin(image_width, image_height));
+
 	
   // Loop over each hole
   for (int i = 0; i < num_holes; i++) {
     // Generate a random center for the hole
     int x_center = rand() % image_width;
     int y_center = rand() % image_height;
-	printf("x_center: %d\n", x_center);
-	printf("y_center: %d\n", y_center);
+
     // Generate a random radius for the hole
     double radius = average_radius * ((double)rand() / RAND_MAX);
 
@@ -268,6 +265,7 @@ int main(int argc, char* argv[]) {
 	fread(dib_header, 1, BMP_DIB_HEADER_SIZE, input_file);
 	image_width = *(int*)(dib_header + 4);
 	image_height = *(int*)(dib_header + 8);
+	printf("Image dimensions: %dx%d pixels\n", image_width, image_height);
 	int pixel_data_offset = *(int*)(bmp_header + 10);
 
 	// Allocate memory for pixel data array
@@ -290,7 +288,6 @@ int main(int argc, char* argv[]) {
 	// Apply the selected filter to the image data using pthreads
 	if (filter_type == 'c') {
 		// Divide image into pixel columns
-		printf("Image Height: %d\n", image_height);
 		int column_width = image_width / THREAD_COUNT;
 		int column_remainder = image_width % THREAD_COUNT;
 		int column_offsets[THREAD_COUNT];
