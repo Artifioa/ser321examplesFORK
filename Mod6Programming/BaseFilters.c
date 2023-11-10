@@ -91,28 +91,27 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
-	// Define the average radius of the holes
-	int average_radius = round(0.08 * fmin(image_width, image_height));
-	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
-	// Loop through each pixel in the image
-	for (int y = 0; y < image_height; y++) {
-		for (int x = 0; x < image_width; x++) {
-			// Calculate the index of the current pixel in the input pixel array
-			int input_index = (y * image_width + x) * 3;
-			// Apply the yellow tint to the pixel
-			unsigned char* tinted_pixel = yellow_tint(&input_pixels[input_index]);
-			// Calculate the index of the current pixel in the output pixel array
-			int output_index = (y * image_width + x) * 3;
-			// Store the tinted pixel in the output pixel array
-			output_pixels[output_index] = tinted_pixel[0];
-			output_pixels[output_index + 1] = tinted_pixel[1];
-			output_pixels[output_index + 2] = tinted_pixel[2];
-			// Free the memory allocated for the tinted pixel
-			free(tinted_pixel);
-		}
-	}
-	// Draw the holes in the output image
+    // Define the average radius of the holes
+    int average_radius = round(0.08 * fmin(image_width, image_height));
+    draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
 
+    // Loop through each pixel in the image
+    for (int y = 0; y < image_height; y++) {
+        for (int x = 0; x < image_width; x++) {
+            // Calculate the index of the current pixel in the input and output pixel arrays
+            int input_index = (y * image_width + x) * 3;
+            int output_index = (y * image_width + x) * 3;
+
+            // Apply the yellow tint to the original input pixel values and store in the output pixel array
+            unsigned char* tinted_pixel = yellow_tint(&input_pixels[input_index]);
+            output_pixels[output_index] = tinted_pixel[0];
+            output_pixels[output_index + 1] = tinted_pixel[1];
+            output_pixels[output_index + 2] = tinted_pixel[2];
+
+            // Free the memory allocated for the tinted pixel
+            free(tinted_pixel);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +319,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, swiss_cheese, arg);
+			pthread_create(&threads[i], NULL, blur_filter, arg);
 		}
 
 		// Wait for threads to finish and combine pixel columns
