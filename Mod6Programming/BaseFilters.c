@@ -129,7 +129,7 @@ void* swiss_cheese_thread(void* arg) {
 	}
 
 	// Call the swiss_cheese() function with the correct arguments
-	swiss_cheese(input_pixels + column_start * 3, output_pixels + column_start * 3, column_end - column_start, image_height);
+	swiss_cheese(input_pixels, output_pixels + column_start * 3, image_width, image_height);
 
 	// Exit the thread
 	pthread_exit(NULL);
