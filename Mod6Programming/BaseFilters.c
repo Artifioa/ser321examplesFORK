@@ -113,7 +113,27 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
         }
     }
 }
+// Define a new function that has the correct type for pthread_create()
+void* swiss_cheese_thread(void* arg) {
+	// Cast the argument to the correct type
+	int thread_index = *(int*)arg;
+	free(arg);
 
+	// Calculate the column range for this thread
+	int column_width = image_width / THREAD_COUNT;
+	int column_remainder = image_width % THREAD_COUNT;
+	int column_start = thread_index * column_width;
+	int column_end = (thread_index + 1) * column_width;
+	if (thread_index == THREAD_COUNT - 1) {
+		column_end += column_remainder;
+	}
+
+	// Call the swiss_cheese() function with the correct arguments
+	swiss_cheese(input_pixels + column_start * 3, output_pixels + column_start * 3, column_end - column_start, image_height);
+
+	// Exit the thread
+	pthread_exit(NULL);
+}
 ////////////////////////////////////////////////////////////////////////////////
 //MAIN PROGRAM CODE
 // Define the box blur filter function
@@ -317,7 +337,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			int* arg = (int*)malloc(sizeof(int));
 			*arg = i;
-			pthread_create(&threads[i], NULL, swiss_cheese, arg);
+			pthread_create(&threads[i], NULL, swiss_cheese_thread, arg);
 		}
 
 		// Wait for threads to finish and combine pixel columns
