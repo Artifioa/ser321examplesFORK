@@ -114,10 +114,8 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
       for (int x = 0; x < image_width; x++) {
         int output_index = (y * image_width + x) * 3;
         if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
-          output_pixels[output_index] = 0;
-          output_pixels[output_index + 1] = 0;
-          output_pixels[output_index + 2] = 0;
-        }
+			memset(&output_pixels[output_index], 0, 3);
+		}
       }
     }
   }
