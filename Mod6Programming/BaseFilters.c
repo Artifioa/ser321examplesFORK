@@ -55,6 +55,10 @@
 // Define the yellow tint function
 unsigned char* yellow_tint(unsigned char* pixel) {
 	unsigned char* tinted_pixel = malloc(3 * sizeof(unsigned char));
+	if (tinted_pixel == NULL) {
+		// Handle memory allocation error
+		return NULL;
+	}
 	tinted_pixel[0] = pixel[0] + 20; // increase red value
 	tinted_pixel[1] = pixel[1] + 20; // increase green value
 	tinted_pixel[2] = pixel[2]; // keep blue value the same
@@ -104,15 +108,23 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
 
             // Apply the yellow tint to the original input pixel values and store in the output pixel array
             unsigned char* tinted_pixel = yellow_tint(&input_pixels[input_index]);
-            output_pixels[output_index] = tinted_pixel[0];
-            output_pixels[output_index + 1] = tinted_pixel[1];
-            output_pixels[output_index + 2] = tinted_pixel[2];
+            if (tinted_pixel != NULL) {
+                output_pixels[output_index] = tinted_pixel[0];
+                output_pixels[output_index + 1] = tinted_pixel[1];
+                output_pixels[output_index + 2] = tinted_pixel[2];
 
-            // Free the memory allocated for the tinted pixel
-            free(tinted_pixel);
+                // Free the memory allocated for the tinted pixel
+                free(tinted_pixel);
+            } else {
+                // Handle error when memory allocation fails
+                printf("Error: Memory allocation failed in yellow_tint\n");
+				return;
+            }
         }
     }
 }
+
+
 // Define a new function that has the correct type for pthread_create()
 void* swiss_cheese_thread(void* arg) {
     // Cast the argument to the correct type
