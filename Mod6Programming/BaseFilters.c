@@ -152,6 +152,7 @@ void* swiss_cheese_thread(void* arg) {
     if (thread_index == THREAD_COUNT - 1) {
         row_end += row_remainder;
     }
+	printf("Image dimensions 3: %dx%d pixels\n", image_width, image_height);
 
     // Call the swiss_cheese() function for each row
     for (int y = row_start; y < row_end; y++) {
@@ -295,7 +296,7 @@ int main(int argc, char* argv[]) {
 			column_offsets[i] = i * column_width;
 		}
 		column_offsets[THREAD_COUNT - 1] += column_remainder;
-
+		printf("Image dimensions 2: %dx%d pixels\n", image_width, image_height);
 		// Create threads to process pixel columns
 		pthread_t threads[THREAD_COUNT];
 		for (int i = 0; i < THREAD_COUNT; i++) {
