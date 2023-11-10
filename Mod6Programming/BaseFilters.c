@@ -61,7 +61,7 @@ unsigned char* yellow_tint(unsigned char* pixel) {
     }
 
     // Define the tinting values
-    int red_tint = 30;
+    int red_tint = 40;
     int green_tint = 30;
     int blue_tint = 0;  // No tint on the blue channel
 
