@@ -61,8 +61,8 @@ unsigned char* yellow_tint(unsigned char* pixel) {
     }
 
     // Define the tinting values
-    int red_tint = 20;
-    int green_tint = 20;
+    int red_tint = 30;
+    int green_tint = 30;
     int blue_tint = 0;  // No tint on the blue channel
 
     // Apply tinting, ensuring that the values don't exceed 255
@@ -104,9 +104,6 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
 
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
-    // Define the average radius of the holes
-    int average_radius = round(0.08 * fmin(image_width, image_height));
-    draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
 
     // Loop through each pixel in the image
     for (int y = 0; y < image_height; y++) {
@@ -131,6 +128,11 @@ void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int
             }
         }
     }
+
+	// Define the average radius of the holes
+    int average_radius = round(0.08 * fmin(image_width, image_height));
+	//Drawing holes
+	draw_holes(input_pixels, output_pixels, image_width, image_height, average_radius);
 }
 
 
