@@ -1,0 +1,14 @@
+{"berlin": ["Capital of Germany", "Home of the Brandenburger Tor", "This city was split into east and west for a long time"],
+"paris": ["Home of the Eifeltower", "City of love", "Capital of France"],
+"phoenix": ["Capital of Arizona", "It is hot here but it is a dry heat", "ASU is located here"],
+"rome": ["Capital of Italy", "Best Espresso", "Colusseum is here"],
+"cheetah": ["Fastest runner in the world", "Lives in Africa", "Is considered a big cat."],
+"goat": ["Smells funny", "Can give milk", "Mostly gives birth two twins"],
+"lemur": ["From Madagascar", "Is a primate", "Hop from tree to tree"],
+"nutria": ["Is a rodent", "From South America", "Weigh about 12 points"],
+"proboscis": ["Is a monkey", "Cannot eat bananas", "Good swimmers"],
+"quokka": ["Happiest animal on earth", "Related to kangaroos", "Can climb trees"],
+"sifaka": ["Named after the alarm cry it makes", "One of the largest lemurs", "Eat mostly plants"],
+"tarsier": ["Can leap up to 5.4 m", "Turn heads almost 180 degrees", "From the Philippines"],
+"wombat": ["Poop in cubes", "But is main form of defense", "Group is called Wisdom"]
+}
