@@ -83,7 +83,7 @@ void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int i
     for (int i = 0; i < num_holes; i++) {
         // Generate a random center for the hole
         int x_center = average_radius + rand() % (image_width - 2 * average_radius);
-        int y_center = row_start + 1.3 * average_radius + rand() % (row_end - row_start - 2.5 * average_radius);
+        int y_center = row_start + average_radius + rand() % (row_end - row_start - 3 * average_radius);
 
         // Generate a random radius for the hole
         double radius = average_radius * ((double)rand() / RAND_MAX);
