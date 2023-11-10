@@ -75,62 +75,62 @@ unsigned char* yellow_tint(unsigned char* pixel) {
 
 
 // Define the draw holes function
+// Define the draw holes function
 void draw_holes(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height, int average_radius) {
-	// Calculate the number of holes to be drawn based on the smallest side of the image
-	int num_holes = round(0.08 * fmin(image_width, image_height));
+    // Calculate the number of holes to be drawn based on the smallest side of the image
+    int num_holes = round(0.08 * fmin(image_width, image_height));
 
-	// Allocate memory for the hole centers and radii
-	int (*hole_centers)[2] = malloc(num_holes * sizeof(int[2]));
-	double* hole_radii = malloc(num_holes * sizeof(double));
+    // Allocate memory for the hole centers and radii
+    int (*hole_centers)[2] = malloc(num_holes * sizeof(int[2]));
+    double* hole_radii = malloc(num_holes * sizeof(double));
 
-	// Generate random x and y coordinates for each hole, ensuring that they are uniformly distributed along the x- and y-axis
-	for (int i = 0; i < num_holes; i++) {
-		hole_centers[i][0] = round((i + 0.5) * image_width / num_holes);
-		hole_centers[i][1] = round((i + 0.5) * image_height / num_holes);
-	}
+    // Generate random x and y coordinates for each hole, ensuring that they are uniformly distributed along the x- and y-axis
+    for (int i = 0; i < num_holes; i++) {
+        hole_centers[i][0] = round((i + 0.5) * image_width / num_holes);
+        hole_centers[i][1] = round((i + 0.5) * image_height / num_holes);
+    }
 
-	// Generate a random radius for each hole, ensuring that the average radius is most common and smaller or larger radii are less common
-	srand(time(NULL));
-	for (int i = 0; i < num_holes; i++) {
-		double r = ((double) rand() / RAND_MAX);
-		if (r < 0.5) {
-			hole_radii[i] = average_radius * sqrt(r * 2);
-		} else {
-			hole_radii[i] = average_radius / sqrt((1 - r) * 2);
-		}
-	}
+    // Generate a random radius for each hole, ensuring that the average radius is most common and smaller or larger radii are less common
+    srand(time(NULL));
+    for (int i = 0; i < num_holes; i++) {
+        double r = ((double)rand() / RAND_MAX);
+        if (r < 0.5) {
+            hole_radii[i] = average_radius * sqrt(r * 2);
+        }
+        else {
+            hole_radii[i] = average_radius / sqrt((1 - r) * 2);
+        }
+    }
 
-	// Draw a black circle with the generated radius at each x and y coordinate
-	for (int i = 0; i < num_holes; i++) {
-		int x_center = hole_centers[i][0];
-		int y_center = hole_centers[i][1];
-		double radius = hole_radii[i];
+    // Copy the input image to the output image
+    memcpy(output_pixels, input_pixels, image_width * image_height * 3);
 
-		for (int y = 0; y < image_height; y++) {
-			for (int x = 0; x < image_width; x++) {
-				int input_index = (y * image_width + x) * 3;
-				int output_index = (y * image_width + x) * 3;
+    // Draw a black circle with the generated radius at each x and y coordinate
+    for (int i = 0; i < num_holes; i++) {
+        int x_center = hole_centers[i][0];
+        int y_center = hole_centers[i][1];
+        double radius = hole_radii[i];
 
-				// Check if the current pixel is within the circle
-				if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
-					// Set the pixel to black
-					output_pixels[output_index] = 0;
-					output_pixels[output_index + 1] = 0;
-					output_pixels[output_index + 2] = 0;
-				} else {
-					// Copy the input pixel to the output pixel
-					output_pixels[output_index] = input_pixels[input_index];
-					output_pixels[output_index + 1] = input_pixels[input_index + 1];
-					output_pixels[output_index + 2] = input_pixels[input_index + 2];
-				}
-			}
-		}
-	}
+        for (int y = 0; y < image_height; y++) {
+            for (int x = 0; x < image_width; x++) {
+                int output_index = (y * image_width + x) * 3;
 
-	// Free the memory allocated for the hole centers and radii
-	free(hole_centers);
-	free(hole_radii);
+                // Check if the current pixel is within the circle
+                if (pow(x - x_center, 2) + pow(y - y_center, 2) <= pow(radius, 2)) {
+                    // Set the pixel to black
+                    output_pixels[output_index] = 0;
+                    output_pixels[output_index + 1] = 0;
+                    output_pixels[output_index + 2] = 0;
+                }
+            }
+        }
+    }
+
+    // Free the memory allocated for the hole centers and radii
+    free(hole_centers);
+    free(hole_radii);
 }
+
 
 // Define the Swiss cheese filter function
 void swiss_cheese(unsigned char* input_pixels, unsigned char* output_pixels, int image_width, int image_height) {
