@@ -1,10 +1,10 @@
 /**
-* (basic description of the program or class)
+* Two filters applied to image, blur and swiss cheese
 *
-* Completion time: (estimation of hours spent on this program)
+* Completion time: 6
 *
-* @author (your name), (anyone else, e.g., Acuna, whose code you used)
-* @version (a version number or a date)
+* @author Chase Molstad, Acuna (template)
+* @version 1.0
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ unsigned char* yellow_tint(unsigned char* pixel) {
     }
 
     // Define the tinting values
-    int red_tint = 30;
-    int green_tint = 30;
+    int red_tint = 50;
+    int green_tint = 50;
     int blue_tint = 0; 
 
     // Apply tinting, ensuring that the values don't exceed 255
