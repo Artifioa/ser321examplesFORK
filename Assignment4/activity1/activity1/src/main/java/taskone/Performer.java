@@ -1,6 +1,6 @@
 /**
   File: Performer.java
-  Author: Student in Fall 2020B
+  Author: Chase Molstad
   Description: Performer class in package taskone.
 */
 
@@ -25,7 +25,7 @@ import org.json.JSONObject;
  */
 class Performer {
 
-    private StringList state;
+    private ArrayList<String> state;
     private Socket conn;
 
     public Performer(Socket sock, StringList strings) {
