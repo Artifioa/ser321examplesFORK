@@ -192,6 +192,7 @@ public class Client {
                             System.exit(0);
                         }
                     }
+                    
                 }
             } while (true);
         } catch (IOException e) {

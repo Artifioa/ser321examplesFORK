@@ -22,6 +22,16 @@ class StringList {
         return strings.size();
     }
 
+    public void clear() {
+        strings.clear();
+    }
+
+    public void set(int index, String str) {
+        if (index >= 0 && index < strings.size()) {
+            strings.set(index, str);
+        }
+    }
+    
     public String toString() {
         return strings.toString();
     }

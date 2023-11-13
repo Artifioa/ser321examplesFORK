@@ -16,10 +16,13 @@ public class ThreadedServer {
         StringList strings = new StringList();
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server Started...");
             System.out.println("ThreadedServer listening on port " + port);
 
             while (true) {
+                System.out.println("Accepting a Request...");
                 Socket clientSocket = serverSocket.accept();
+                
                 Runnable clientHandler = new ClientHandler(clientSocket, strings);
                 new Thread(clientHandler).start();
             }

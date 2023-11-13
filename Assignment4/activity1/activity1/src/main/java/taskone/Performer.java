@@ -16,8 +16,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import netscape.javascript.JSObject;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 /**
  * Class: Performer 
@@ -25,7 +25,7 @@ import org.json.JSONObject;
  */
 class Performer {
 
-    private ArrayList<String> state;
+    private StringList state;
     private Socket conn;
 
     public Performer(Socket sock, StringList strings) {
@@ -120,7 +120,18 @@ class Performer {
             return resp;
         }
 
-        int index = req.getJSONObject("data").getInt("index");
+        int index;
+        try {
+            index = req.getJSONObject("data").getInt("index");
+        } catch (JSONException e) {
+            resp.put("ok", false);
+            resp.put("type", 4);
+            JSONObject error = new JSONObject();
+            error.put("error", "invalid index");
+            error.put("details", "Index provided is not an integer.");
+            resp.put("data", error);
+            return resp;
+        }
         String str = req.getJSONObject("data").getString("string");
 
         if (index < 0 || index >= state.size()) {
@@ -133,7 +144,18 @@ class Performer {
             return resp;
         }
 
-        state.set(index, str);
+        try {
+            state.set(index, str);
+        } catch (Exception e) {
+            resp.put("ok", false);
+            resp.put("type", 4);
+            JSONObject error = new JSONObject();
+            error.put("error", "invalid string");
+            error.put("details", "String provided is not valid.");
+            resp.put("data", error);
+            return resp;
+        }
+
         resp.put("ok", true);
         resp.put("data", state.toString());
         return resp;
