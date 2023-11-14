@@ -18,6 +18,8 @@ class SockBaseServer {
     int port = 9099; // default port
     Game game;
 
+    private String yourAnswer;
+
 
     public SockBaseServer(Socket sock, Game game){
         this.clientSocket = sock;
@@ -38,6 +40,7 @@ class SockBaseServer {
 
 
         System.out.println("Ready...");
+        
         try {
             // read the proto object and put into new objct
             Request op = Request.parseDelimitedFrom(in);
@@ -63,9 +66,9 @@ class SockBaseServer {
             // Example how to start a new game and how to build a response with the image which you could then send to the server
             // LINE 67-108 are just an example for Protobuf and how to work with the differnt types. They DO NOT
             // belong into this code. 
-            game.newGame(); // starting a new game
+            //game.newGame(); // starting a new game
 
-
+            game.newGame(this);
 
 
 
@@ -82,12 +85,15 @@ class SockBaseServer {
             // Gradually reveal the image
             while (game.getIdx() < game.getIdxMax()) {
                 // Replace one character in the image
-                game.replaceOneCharacter();
-                game.replaceOneCharacter();
-                game.replaceOneCharacter();
-                game.replaceOneCharacter();
-                game.replaceOneCharacter();
-
+                if (game.getIdx() < game.getIdxMax() - 10){
+                    replace(10);
+                }
+                else{
+                    replace(game.getIdxMax() - game.getIdx());
+                }
+                System.out.println(game.getIdx());
+                System.out.println(game.getIdxMax());
+            
                 // Send the updated image to the client
                 Response revealResponse = Response.newBuilder()
                         .setResponseType(Response.ResponseType.TASK)
@@ -95,8 +101,35 @@ class SockBaseServer {
                         .setTask("Revealing image...")
                         .build();
                 revealResponse.writeDelimitedTo(out);
-
-                // Introduce a delay
+                out.flush();
+            
+                // Add the code to handle user guesses
+                boolean isGameOver = false;
+                if (!isGameOver) {
+                    // Receive the user's guess from the client
+                    Request guessRequest = Request.parseDelimitedFrom(in);
+                    System.out.println(guessRequest.getAnswer());
+                    String userGuess = guessRequest.getAnswer();
+            
+                    // Send a response to the client based on the user's guess
+                    Response guessResponse = Response.newBuilder()
+                            .setResponseType(Response.ResponseType.TASK)
+                            .setImage(game.getImage())
+                            .build();
+                    guessResponse.writeDelimitedTo(out);
+                    processUserGuess(userGuess);
+                    System.out.println("Your guess: " + userGuess);
+                    out.flush();
+                    // Check if the game is completed
+                    isGameOver = guessResponse.getTask().equals("Game completed!");
+                }
+                if (isGameOver) {
+                    break; // Exit the loop if the game is completed
+                }
+                if(game.getIdx() == game.getIdxMax()){
+                    break;
+                }
+                // Add a delay before revealing the next part of the image
                 Thread.sleep(1000);
             }
 
@@ -107,15 +140,6 @@ class SockBaseServer {
                     .setTask("Game completed!")
                     .build();
             completeResponse.writeDelimitedTo(out);
-
-
-
-
-
-
-
-
-
 
 
             // adding the String of the game to 
@@ -157,6 +181,11 @@ class SockBaseServer {
                 System.out.println(lead.getName() + ": " + lead.getWins());
             }
 
+            
+
+
+
+
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
@@ -178,8 +207,20 @@ class SockBaseServer {
         }
         return game.getImage();
     }
-
-
+    
+    public void processUserGuess(String userGuess) {
+        // Implement your logic to compare the user's guess with the correct answer
+        // For simplicity, let's assume the correct answer is "your_answer"
+        System.out.println("Correct answer: " + yourAnswer);
+        if (userGuess.equals(yourAnswer)) {
+            System.out.println("Correct guess! You earned a point.");
+        } else {
+            System.out.println("Incorrect guess. You lost.");
+        }
+    }
+    public void setYourAnswer(String yourAnswer) {
+        this.yourAnswer = yourAnswer;
+    }
     /**
      * Writing a new entry to our log
      * @param name - Name of the person logging in

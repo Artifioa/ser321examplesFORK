@@ -85,27 +85,40 @@ public class SockBaseClient {
                         }
                         break;
                     case 2:
-                        System.out.println("Type 'e' to reveal the image. Type 'q' to quit the game.");
+                        System.out.println("Guess the ASCII image! Type your guess and press 'enter'. Type 'q' to quit the game.");
+
+                        // Send initial request to start the image revealing
+                        Request revealRequest = Request.newBuilder()
+                                .setOperationType(Request.OperationType.NEW)
+                                .build();
+                        revealRequest.writeDelimitedTo(out);
                         while (true) {
-                            // Read the user input
-                            char userInput = scanner.next().charAt(0);
-
-                            // If the user types 'q', exit the game loop
-                            if (userInput == 'q') {
-                                break;
+                            // Read the server's response (containing the updated image)
+                            Response revealResponse = Response.parseDelimitedFrom(in);
+                            System.out.println(revealResponse.getImage());
+                        
+                            // Check if the game is completed
+                            if (revealResponse.getResponseType() == Response.ResponseType.TASK &&
+                                    revealResponse.getTask().equals("Game completed!")) {
+                                break; // Exit the loop if the game is completed
                             }
-
-                            // If the user types 'e', send a request to the server to reveal the image
-                            if (userInput == 'e') {
-                                Request revealRequest = Request.newBuilder()
-                                        .setOperationType(Request.OperationType.NEW)
-                                        .build();
-                                revealRequest.writeDelimitedTo(out);
-
-                                // Read the server's response (containing the updated image)
-                                Response revealResponse = Response.parseDelimitedFrom(in);
-                                System.out.println(revealResponse.getImage());
-                            }
+                        
+                            // Prompt user to guess the ASCII image
+                            System.out.print("Your guess: ");
+                            String userGuess = scanner.nextLine();
+                        
+                            // Send the guess to the server
+                            Request guessRequest = Request.newBuilder()
+                                    .setOperationType(Request.OperationType.ANSWER)
+                                    .setAnswer(userGuess)
+                                    .build();
+                            guessRequest.writeDelimitedTo(out);
+                        
+                            // Read the server's response (containing the result of the guess)
+                            Response guessResponse = Response.parseDelimitedFrom(in);
+                            System.out.println(guessResponse.getTask());
+                        
+                            // Thread.sleep(1000);
                         }
 
                     case 3:
