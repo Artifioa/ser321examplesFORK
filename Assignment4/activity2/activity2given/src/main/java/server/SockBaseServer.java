@@ -10,20 +10,19 @@ import proto.ResponseProtos.*;
 
 class SockBaseServer {
     static String logFilename = "logs.txt";
-
+    private List<Leader> leaderboard = new ArrayList<>();
     ServerSocket socket = null;
     InputStream in = null;
     OutputStream out = null;
     Socket clientSocket = null;
     int port = 9099; // default port
     Game game;
-
-    private String yourAnswer;
-
+    private static final String LEADERBOARD_FILE = "leaderboard.txt";
 
     public SockBaseServer(Socket sock, Game game){
         this.clientSocket = sock;
         this.game = game;
+        loadLeaderboardFromFile();
         try {
             in = clientSocket.getInputStream();
             out = clientSocket.getOutputStream();
@@ -38,161 +37,156 @@ class SockBaseServer {
     public void start() throws IOException {
         String name = "";
 
-
         System.out.println("Ready...");
         
-        try {
-            // read the proto object and put into new objct
-            Request op = Request.parseDelimitedFrom(in);
-            String result = null;
+        boolean isRunning = true;
+        while (isRunning) {
+            try {
+                // read the proto object and put into new objct
+                Request op = Request.parseDelimitedFrom(in);
+                String result = null;
 
-            
+                // if the operation is NAME (so the beginning then say there is a commention and greet the client)
+                if (op.getOperationType() == Request.OperationType.NAME) {
+                    // get name from proto object
+                    name = op.getName();
 
-            // if the operation is NAME (so the beginning then say there is a commention and greet the client)
-            if (op.getOperationType() == Request.OperationType.NAME) {
-                // get name from proto object
-            name = op.getName();
+                    // writing a connect message to the log with name and CONNENCT
+                    writeToLog(name, Message.CONNECT);
+                    System.out.println("Got a connection and a name: " + name);
+                    Response response = Response.newBuilder()
+                            .setResponseType(Response.ResponseType.HELLO)
+                            .setHello("Hello " + name + " and welcome. \nWhat would you like to do? \n 1 - to see the leader board \n 2 - to enter a game \n 3 - to quit")
+                            .build();
+                    updateLeaderboard(name, false);
+                    response.writeDelimitedTo(out);
+                }
+                if (op.getOperationType() == Request.OperationType.NEW) {
+                    // start a new game
+                    game.newGame();
 
-            // writing a connect message to the log with name and CONNENCT
-            writeToLog(name, Message.CONNECT);
-                System.out.println("Got a connection and a name: " + name);
-                Response response = Response.newBuilder()
-                        .setResponseType(Response.ResponseType.HELLO)
-                        .setHello("Hello " + name + " and welcome. \nWhat would you like to do? \n 1 - to see the leader board \n 2 - to enter a game \n 3 - to quit")
-                        .build();
-                response.writeDelimitedTo(out);
-            }
+                    // gradually reveal the image
+                    while (game.getIdx() < game.getIdxMax()) {
+                        // Replace 10 characters in the image
+                        System.out.println("LOOP STARTED");
+                        replace10percent();
+                        
+                        System.out.println(game.getIdx());
+                        System.out.println(game.getIdxMax());
 
-            // Example how to start a new game and how to build a response with the image which you could then send to the server
-            // LINE 67-108 are just an example for Protobuf and how to work with the differnt types. They DO NOT
-            // belong into this code. 
-            //game.newGame(); // starting a new game
+                        // Send the updated image to the client
+                        Response revealResponse = Response.newBuilder()
+                                .setResponseType(Response.ResponseType.TASK)
+                                .setImage(game.getImage())
+                                .setTask("Revealing image...")
+                                .build();
+                        revealResponse.writeDelimitedTo(out);
+                        out.flush();
 
-            game.newGame(this);
+                        // Add a delay before revealing the next part of the image
+                        Thread.sleep(1000);
 
+                        // Receive the user's guess from the client
+                        Request guessRequest = Request.parseDelimitedFrom(in);
+                        String userGuess = guessRequest.getAnswer();
 
+                        // Check if the game is completed
+                        if (game.getIdx() == game.getIdxMax()) {
+                            Response mainMenuResponse = Response.newBuilder()
+                                .setResponseType(Response.ResponseType.BYE)
+                                .setTask("What would you like to do? \n 1 - to see the leader board \n 2 - to enter a game \n 3 - to quit")
+                                .build();
+                            mainMenuResponse.writeDelimitedTo(out);
+                            updateLeaderboard(name, true);
+                            out.flush();
+                        }  
+                        System.out.println("LOOP FINISHED");
+                    }
+                }
+                else if (op.getOperationType() == Request.OperationType.LEADERBOARD) {
+                    Response.Builder responseBuilder = Response.newBuilder()
+                            .setResponseType(Response.ResponseType.LEADERBOARD);
 
+                    if (leaderboard.isEmpty()) {
+                        responseBuilder.setMessage("Leaderboard is empty.");
+                    } else {
+                        List<Leader> sortedLeaderboard = new ArrayList<>(leaderboard);
+                        sortedLeaderboard.sort((leader1, leader2) -> leader2.getWins() - leader1.getWins());
 
+                        for (Leader leader : sortedLeaderboard) {
+                            responseBuilder.addLeaderboard(leader);
+                        }
+                    }
 
-                // Send initial image to the client
-            Response initialResponse = Response.newBuilder()
-                    .setResponseType(Response.ResponseType.TASK)
-                    .setImage(game.getImage())
-                    .setTask("Great task goes here")
-                    .build();
-            initialResponse.writeDelimitedTo(out);
+                    Response response = responseBuilder.build();
+                    response.writeDelimitedTo(out);
+                }
 
-            // Gradually reveal the image
-            while (game.getIdx() < game.getIdxMax()) {
-                // Replace one character in the image
-                if (game.getIdx() < game.getIdxMax() - 10){
+                // Example how to start a new game and how to build a response with the image which you could then send to the server
+                // LINE 67-108 are just an example for Protobuf and how to work with the differnt types. They DO NOT
+                // belong into this code. 
+                /* 
+                game.newGame(); // starting a new game
+                // read the response from the server
+                Response response = Response.parseDelimitedFrom(in);
+                // print the server response.
+                System.out.println(response.getTask());
+                System.out.println(response);
+
+                */
+
+                /* 
+                // Gradually reveal the image
+                while (game.getIdx() < game.getIdxMax()) {
+                    // Replace 10 characters in the image
+                    System.out.println("LOOP STARTED");
                     replace(10);
-                }
-                else{
-                    replace(game.getIdxMax() - game.getIdx());
-                }
-                System.out.println(game.getIdx());
-                System.out.println(game.getIdxMax());
-            
-                // Send the updated image to the client
-                Response revealResponse = Response.newBuilder()
-                        .setResponseType(Response.ResponseType.TASK)
-                        .setImage(game.getImage())
-                        .setTask("Revealing image...")
-                        .build();
-                revealResponse.writeDelimitedTo(out);
-                out.flush();
-            
-                // Add the code to handle user guesses
-                boolean isGameOver = false;
-                if (!isGameOver) {
-                    // Receive the user's guess from the client
-                    Request guessRequest = Request.parseDelimitedFrom(in);
-                    System.out.println(guessRequest.getAnswer());
-                    String userGuess = guessRequest.getAnswer();
-            
-                    // Send a response to the client based on the user's guess
-                    Response guessResponse = Response.newBuilder()
+                    
+                    System.out.println(game.getIdx());
+                    System.out.println(game.getIdxMax());
+
+                    // Send the updated image to the client
+                    Response revealResponse = Response.newBuilder()
                             .setResponseType(Response.ResponseType.TASK)
                             .setImage(game.getImage())
+                            .setTask("Revealing image...")
                             .build();
-                    guessResponse.writeDelimitedTo(out);
-                    processUserGuess(userGuess);
-                    System.out.println("Your guess: " + userGuess);
+                    revealResponse.writeDelimitedTo(out);
                     out.flush();
+
+                    // Add a delay before revealing the next part of the image
+                    Thread.sleep(1000);
+
+                    // Receive the user's guess from the client
+                    Request guessRequest = Request.parseDelimitedFrom(in);
+                    String userGuess = guessRequest.getAnswer();
+
                     // Check if the game is completed
-                    isGameOver = guessResponse.getTask().equals("Game completed!");
+                    if (game.getIdx() == game.getIdxMax()) {
+                        game.newGame();
+
+                        // Notify the client that the image revealing is complete and a new game is starting
+                        Response newGameResponse = Response.newBuilder()
+                                .setResponseType(Response.ResponseType.TASK)
+                                .setImage(game.getImage())
+                                .setTask("New game starting!")
+                                .build();
+                        newGameResponse.writeDelimitedTo(out);
+                        out.flush();
+                    }  
+                    System.out.println("LOOP FINISHED");
                 }
-                if (isGameOver) {
-                    break; // Exit the loop if the game is completed
-                }
-                if(game.getIdx() == game.getIdxMax()){
-                    break;
-                }
-                // Add a delay before revealing the next part of the image
-                Thread.sleep(1000);
+                */
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                isRunning = false; // stop the loop if an exception occurs
             }
-
-            // The game is complete, you can send a completion message if needed
-            Response completeResponse = Response.newBuilder()
-                    .setResponseType(Response.ResponseType.TASK)
-                    .setImage(game.getImage())
-                    .setTask("Game completed!")
-                    .build();
-            completeResponse.writeDelimitedTo(out);
-
-
-            // adding the String of the game to 
-            Response response2 = Response.newBuilder()
-                .setResponseType(Response.ResponseType.TASK)
-                .setImage(game.getImage())
-                .setTask("Great task goes here")
-                .build();
-
-            // On the client side you would receive a Response object which is the same as the one in line 70, so now you could read the fields
-            System.out.println("Task: " + response2.getResponseType());
-            System.out.println("Image: \n" + response2.getImage());
-            System.out.println("Task: \n" + response2.getTask());
-
-            // Creating Leader entry and Leader response
-            Response.Builder res = Response.newBuilder()
-                .setResponseType(Response.ResponseType.LEADERBOARD);
-
-            // building a leader entry
-            Leader leader = Leader.newBuilder()
-                .setName("name")
-                .setWins(0)
-                .setLogins(0)
-                .build();
-
-            // building a leader entry
-            Leader leader2 = Leader.newBuilder()
-                .setName("name2")
-                .setWins(1)
-                .setLogins(1)
-                .build();
-
-            res.addLeaderboard(leader);
-            res.addLeaderboard(leader2);
-
-            Response response3 = res.build();
-
-            for (Leader lead: response3.getLeaderboardList()){
-                System.out.println(lead.getName() + ": " + lead.getWins());
-            }
-
-            
-
-
-
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            if (out != null)  out.close();
-            if (in != null)   in.close();
-            if (clientSocket != null) clientSocket.close();
         }
+
+        if (out != null)  out.close();
+        if (in != null)   in.close();
+        if (clientSocket != null) clientSocket.close();
     }
 
     /**
@@ -208,19 +202,107 @@ class SockBaseServer {
         return game.getImage();
     }
     
-    public void processUserGuess(String userGuess) {
-        // Implement your logic to compare the user's guess with the correct answer
-        // For simplicity, let's assume the correct answer is "your_answer"
-        System.out.println("Correct answer: " + yourAnswer);
-        if (userGuess.equals(yourAnswer)) {
-            System.out.println("Correct guess! You earned a point.");
-        } else {
-            System.out.println("Incorrect guess. You lost.");
+    /**
+     * Replaces 10% of the characters in the image
+     * @return String of the new hidden image
+     */
+    public void replace10percent(){
+        if (Math.round(game.getIdxMax() / 10) < (game.getIdxMax() - game.getIdx())){
+            replace(Math.round(game.getIdxMax() / 10));
+        }
+        else{
+            replace(game.getIdxMax() - game.getIdx());
         }
     }
-    public void setYourAnswer(String yourAnswer) {
-        this.yourAnswer = yourAnswer;
+
+    /**
+     * Method to update the leaderboard
+     * @param playerName - Name of the player
+     * @param isWin - Boolean to indicate if the player won the game
+     */
+    private void updateLeaderboard(String playerName, boolean isWin) {
+        // Search for the player in the leaderboard
+        Leader player = null;
+        int playerIndex = -1;
+        for (int i = 0; i < leaderboard.size(); i++) {
+            Leader leader = leaderboard.get(i);
+            if (leader.getName().equals(playerName)) {
+                player = leader;
+                playerIndex = i;
+                break;
+            }
+        }
+
+        if (player == null) {
+            // If the player is not in the leaderboard, create a new entry
+            int wins = 0;
+            int logins = 1;
+            player = Leader.newBuilder()
+                    .setName(playerName)
+                    .setWins(wins)
+                    .setLogins(logins)
+                    .build();
+            leaderboard.add(player);
+        } else {
+            // Increment the login count
+            int logins = player.getLogins() + 1;
+            Leader updatedPlayer = Leader.newBuilder()
+                    .mergeFrom(player)
+                    .setLogins(logins)
+                    .build();
+            leaderboard.set(playerIndex, updatedPlayer);
+
+            // Update the wins count
+            if (isWin) {
+                int wins = player.getWins() + 1;
+                updatedPlayer = Leader.newBuilder()
+                        .mergeFrom(updatedPlayer)
+                        .setWins(wins)
+                        .build();
+                leaderboard.set(playerIndex, updatedPlayer);
+            }
+        }
+
+        // Save the updated leaderboard to the file
+        saveLeaderboardToFile();
     }
+
+
+    /**
+     * Loading the leaderboard from the file
+     */    
+    private void loadLeaderboardFromFile() {
+        File leaderboardFile = new File(LEADERBOARD_FILE);
+        if (leaderboardFile.exists()) {
+            try (FileInputStream fileInputStream = new FileInputStream(leaderboardFile)) {
+                leaderboard.clear();
+
+                while (true) {
+                    Leader leader = Leader.parseDelimitedFrom(fileInputStream);
+                    if (leader == null) {
+                        break;
+                    }
+                    leaderboard.add(leader);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Saving the leaderboard to the file
+     */
+    private void saveLeaderboardToFile() {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(LEADERBOARD_FILE)) {
+            for (Leader leader : leaderboard) {
+                leader.writeDelimitedTo(fileOutputStream);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Writing a new entry to our log
      * @param name - Name of the person logging in
@@ -308,3 +390,115 @@ class SockBaseServer {
     }
 }
 
+
+
+
+
+
+
+
+
+/*
+class SockBaseServer {
+        static String logFilename = "logs.txt";
+
+        ServerSocket socket = null;
+        InputStream in = null;
+        OutputStream out = null;
+        Socket clientSocket = null;
+        int port = 9099; // default port
+        Game game;
+        HashMap<String, Integer> scores = new HashMap<String, Integer>();
+
+        public SockBaseServer(Socket sock, Game game) {
+            this.clientSocket = sock;
+            this.game = game;
+        }
+
+        public void start() throws IOException {
+            try {
+                in = clientSocket.getInputStream();
+                out = clientSocket.getOutputStream();
+                Request req = null;
+                while ((req = Request.parseDelimitedFrom(in)) != null) {
+                    switch (req.getOperationType()) {
+                        case CONNECT:
+                            Connect connect = req.getConnect();
+                            String name = connect.getName();
+                            writeToLog(name, req);
+                            if (!scores.containsKey(name)) {
+                                scores.put(name, 0);
+                            }
+                            break;
+                        case GUESS:
+                            Guess guess = req.getGuess();
+                            String guessStr = guess.getGuess();
+                            String result = game.guess(guessStr);
+                            replace10percent();
+                            Response response = Response.newBuilder()
+                                    .setResponseType(Response.ResponseType.GUESS)
+                                    .setImage(game.getImage())
+                                    .setResult(result)
+                                    .build();
+                            response.writeDelimitedTo(out);
+                            break;
+                        case LEADERBOARD:
+                            getLeaderboard();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("Exception caught when trying to listen on port "
+                        + port + " or listening for a connection");
+                System.out.println(e.getMessage());
+            } finally {
+                in.close();
+                out.close();
+                clientSocket.close();
+                socket.close();
+            }
+        }
+
+        public String replace(int num) {
+            for (int i = 0; i < num; i++) {
+                if (game.getIdx() < game.getIdxMax())
+                    game.replaceOneCharacter();
+            }
+            return game.getImage();
+        }
+
+        public void replace10percent() {
+            if (Math.round(game.getIdxMax() / 10) < (game.getIdxMax() - game.getIdx())) {
+                replace(Math.round(game.getIdxMax() / 10));
+            } else {
+                replace(game.getIdxMax() - game.getIdx());
+            }
+        }
+
+        public void getLeaderboard() {
+            // sort the scores in descending order
+            List<Map.Entry<String, Integer>> sortedScores = new ArrayList<>(scores.entrySet());
+            sortedScores.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+
+            // create the leaderboard string
+            StringBuilder leaderboardBuilder = new StringBuilder();
+            for (Map.Entry<String, Integer> entry : sortedScores) {
+                leaderboardBuilder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+            }
+            String leaderboard = leaderboardBuilder.toString();
+
+            // send the leaderboard response
+            Response response = Response.newBuilder()
+                    .setResponseType(Response.ResponseType.LEADERBOARD)
+                    .setLeaderboard(leaderboard)
+                    .build();
+            try {
+                response.writeDelimitedTo(out);
+            } catch (IOException e) {
+                System.out.println("Exception caught when trying to send leaderboard response");
+                System.out.println(e.getMessage());
+            }
+        }
+ */

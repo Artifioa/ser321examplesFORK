@@ -50,7 +50,7 @@ public class Game {
      * Method loads in a new image from the specified files and creates the hidden image for it. 
      * @return Nothing.
      */
-    public void newGame(SockBaseServer server){
+    public void newGame(){
         if (won) {
             idx = 0;
             won = false; 
@@ -61,11 +61,8 @@ public class Game {
                 Random rand = new Random(); 
                 col = 0;
                 int randInt = rand.nextInt(files.size());
-                String fileName = files.get(randInt);
-                server.setYourAnswer(fileName);
-
                 File file = new File(
-                        Game.class.getResource("/" + fileName).getFile()
+                        Game.class.getResource("/"+files.get(randInt)).getFile()
                         );
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String line;
