@@ -1,76 +1,101 @@
-#include "InstanceHost.h"
+/**
+ * Implementation file for functions to simulate a cloud-like server instance
+ * host.
+ * 
+ * @author Chase Molstad, Acuna
+ * @version 1.1
+ */
+
 #include "InstanceHost.h"
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-//struct for representing the host
-struct host {
-    pthread_t* instances; //array of active instances
-    int num_instances; //number of active instances
-    pthread_mutex_t lock; //mutex for thread safety
+// Structure to represent a server instance (thread)
+struct instance {
+    pthread_t thread;           // Thread representing the server instance
+    struct job_node* current_job; // Current job being processed by the instance
 };
 
-//forward declarations for (private) functions
-void* instance_thread(void* arg);
+// Structure to represent the host
+struct host {
+    pthread_mutex_t mutex;       // Mutex to protect the list of active instances
+    struct instance* instances;  // List of active instances
+    int instance_count;          // Number of active instances
+};
 
-/**
-* Initializes the host environment.
-*/
+// Function to process a job (data value squared)
+void process_job(struct job_node* job) {
+    if (job != NULL && job->data_result != NULL) {
+        *(job->data_result) = job->data * job->data;
+    }
+}
+
+// Thread function to handle processing of jobs for an instance
+void* instance_thread(void* arg) {
+    struct instance* inst = (struct instance*)arg;
+    
+    // Process jobs until there are no more
+    while (inst->current_job != NULL) {
+        process_job(inst->current_job);
+        inst->current_job = inst->current_job->next;
+    }
+
+    return NULL;
+}
+
 host* host_create() {
     host* h = (host*)malloc(sizeof(host));
+    if (h == NULL) {
+        perror("Error creating host");
+        exit(EXIT_FAILURE);
+    }
+
+    pthread_mutex_init(&h->mutex, NULL);
     h->instances = NULL;
-    h->num_instances = 0;
-    pthread_mutex_init(&h->lock, NULL);
+    h->instance_count = 0;
+
     return h;
 }
 
-/**
-* Shuts down the host environment. Ensures any outstanding batches have
-* completed.
-*/
 void host_destroy(host** h) {
-    pthread_mutex_lock(&(*h)->lock);
-    //wait for all instances to complete
-    for (int i = 0; i < (*h)->num_instances; i++) {
-        pthread_join((*h)->instances[i], NULL);
+    if (h == NULL || *h == NULL) {
+        return;
     }
-    free((*h)->instances);
-    pthread_mutex_unlock(&(*h)->lock);
-    pthread_mutex_destroy(&(*h)->lock);
+
+    // Wait for all instances to finish
+    pthread_mutex_lock(&(*h)->mutex);
+    struct instance* current_instance = (*h)->instances;
+    while (current_instance != NULL) {
+        pthread_join(current_instance->thread, NULL);
+        current_instance = current_instance->next;
+    }
+    pthread_mutex_unlock(&(*h)->mutex);
+
+    // Clean up
+    pthread_mutex_destroy(&(*h)->mutex);
     free(*h);
     *h = NULL;
 }
 
-/**
-* Creates a new server instance (i.e., thread) to handle processing the items
-* contained in a batch (i.e., a listed list of job_node). InstanceHost will
-* maintain a list of active instances, and if the host is requested to
-* shutdown, ensures that all jobs are completed.
-*
-* @param job_batch_list A list containing the jobs in a batch to process.
-*/
 void host_request_instance(host* h, struct job_node* batch) {
-    printf("LoadBalancer:Received batch and spinning up new instance.\n")
-    pthread_mutex_lock(&h->lock);
-    //create new instance
-    pthread_t instance;
-    pthread_create(&instance, NULL, instance_thread, (void*)batch);
-    //add instance to array
-    h->num_instances++;
-    h->instances = (pthread_t*)realloc(h->instances, h->num_instances * sizeof(pthread_t));
-    h->instances[h->num_instances - 1] = instance;
-    pthread_mutex_unlock(&h->lock);
-}
+    pthread_mutex_lock(&h->mutex);
 
-/**
-* Private function for processing a batch of jobs in a separate thread.
-*/
-void* instance_thread(void* arg) {
-    struct job_node* batch = (struct job_node*)arg;
-    //process jobs in batch
-    while (batch != NULL) {
-        process_job(batch->job);
-        batch = batch->next;
+    // Create a new instance
+    struct instance* new_instance = (struct instance*)malloc(sizeof(struct instance));
+    if (new_instance == NULL) {
+        perror("Error creating instance");
+        exit(EXIT_FAILURE);
     }
-    return NULL;
+
+    new_instance->current_job = batch;
+    pthread_create(&new_instance->thread, NULL, &instance_thread, (void*)new_instance);
+
+    // Add the new instance to the list
+    new_instance->next = h->instances;
+    h->instances = new_instance;
+    h->instance_count++;
+
+    pthread_mutex_unlock(&h->mutex);
 }

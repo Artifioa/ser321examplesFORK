@@ -1,106 +1,96 @@
-#include "InstanceHost.h"
+/**
+ * Implementation file for functions to simulate a load balancer.
+ * 
+ * @author Chase Molstad, Acuna
+ * @version 1.1
+ */
+
 #include "LoadBalancer.h"
+#include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-//structure to represent the load balancer
+// Structure to represent the load balancer
 struct balancer {
-    int batch_size;         //size of a batch
-    int num_jobs;           //number of jobs in the current batch
-    struct job_node* jobs;  //pointer to the first job in the current batch
-    struct balancer* next;  //pointer to the next load balancer in a list of load balancers
+    int batch_size;              // Batch size for the load balancer
+    struct job_node* job_list;   // List of jobs
+    int job_count;               // Number of jobs in the list
+    pthread_mutex_t mutex;       // Mutex to protect the job list
+    host* instance_host;         // Instance host associated with the load balancer
 };
 
-//helper function to create a new job node
-struct job_node* job_node_create(int user_id, int data, int* data_return) {
-    struct job_node* node = (struct job_node*) malloc(sizeof(struct job_node));
-    node->user_id = user_id;
-    node->data = data;
-    node->data_result = data_return;
-    node->next = NULL;
-    return node;
-}
-
-//helper function to free a job node
-void job_node_destroy(struct job_node* node) {
-    free(node);
-}
-
-//helper function to process a batch of jobs
-void process_batch(struct balancer* lb, struct job_node* jobs) {
-    //create an array to hold the data for the batch
-    int* batch_data = (int*) malloc(sizeof(int) * lb->batch_size);
-    int i = 0;
-    //copy the data from the job nodes into the batch data array
-    while (jobs != NULL) {
-        batch_data[i] = jobs->data;
-        jobs = jobs->next;
-        i++;
-    }
-    //get an instance from the instance host and process the batch
-    int* batch_result = instance_process_batch(instance_host_get_instance(), batch_data, lb->batch_size);
-    
-    //copy the results back into the job nodes
-    i = 0;
-    while (lb->jobs != NULL) {
-        lb->jobs->data_result = &batch_result[i];
-        lb->jobs = lb->jobs->next;
-        i++;
-    }
-    //free the batch data and result arrays
-    free(batch_data);
-    free(batch_result);
-}
-
-//public function to create a load balancer
 balancer* balancer_create(int batch_size) {
-    balancer* lb = (balancer*) malloc(sizeof(balancer));
+    balancer* lb = (balancer*)malloc(sizeof(balancer));
+    if (lb == NULL) {
+        perror("Error creating load balancer");
+        exit(EXIT_FAILURE);
+    }
+
     lb->batch_size = batch_size;
-    lb->num_jobs = 0;
-    lb->jobs = NULL;
-    lb->next = NULL;
+    lb->job_list = NULL;
+    lb->job_count = 0;
+    pthread_mutex_init(&lb->mutex, NULL);
+    lb->instance_host = host_create();
+
     return lb;
 }
 
-//public function to destroy a load balancer
 void balancer_destroy(balancer** lb) {
-    //process any outstanding jobs
-    if ((*lb)->num_jobs > 0) {
-        process_batch(*lb, (*lb)->jobs);
+    if (lb == NULL || *lb == NULL) {
+        return;
     }
-    //free the job nodes
-    while ((*lb)->jobs != NULL) {
-        struct job_node* temp = (*lb)->jobs;
-        (*lb)->jobs = (*lb)->jobs->next;
-        job_node_destroy(temp);
+
+    // Ensure any outstanding batches have completed
+    pthread_mutex_lock(&(*lb)->mutex);
+    if ((*lb)->job_count > 0) {
+        // If there are leftover jobs, create an instance host to handle them
+        host_request_instance((*lb)->instance_host, (*lb)->job_list);
+        (*lb)->job_list = NULL;
+        (*lb)->job_count = 0;
     }
-    //free the load balancer
+    pthread_mutex_unlock(&(*lb)->mutex);
+
+    // Clean up
+    host_destroy(&(*lb)->instance_host);
+    pthread_mutex_destroy(&(*lb)->mutex);
     free(*lb);
     *lb = NULL;
 }
 
-//public function to add a job to a load balancer
 void balancer_add_job(balancer* lb, int user_id, int data, int* data_return) {
+    pthread_mutex_lock(&lb->mutex);
 
-    printf("LoadBalancer:Received new job from user# %d to process data= %d and store it at %p.\n",user_id,data,data_return);
-    //create a new job node
-    struct job_node* node = job_node_create(user_id, data, data_return);
-    //add the job node to the end of the list of jobs
-    if (lb->jobs == NULL) {
-        lb->jobs = node;
+    // Create a new job node
+    struct job_node* new_job = (struct job_node*)malloc(sizeof(struct job_node));
+    if (new_job == NULL) {
+        perror("Error creating job");
+        exit(EXIT_FAILURE);
+    }
+
+    new_job->user_id = user_id;
+    new_job->data = data;
+    new_job->data_result = data_return;
+    new_job->next = NULL;
+
+    // Add the job to the list
+    if (lb->job_list == NULL) {
+        lb->job_list = new_job;
     } else {
-        struct job_node* temp = lb->jobs;
-        while (temp->next != NULL) {
-            temp = temp->next;
+        struct job_node* current_job = lb->job_list;
+        while (current_job->next != NULL) {
+            current_job = current_job->next;
         }
-        temp->next = node;
+        current_job->next = new_job;
     }
-    lb->num_jobs++;
-    //if the batch is full, process it
-    if (lb->num_jobs == lb->batch_size) {
-        process_batch(lb, lb->jobs);
-        lb->num_jobs = 0;
-        lb->jobs = NULL;
+
+    lb->job_count++;
+
+    // If enough jobs have been added to fill a batch, request a new instance
+    if (lb->job_count >= lb->batch_size) {
+        host_request_instance(lb->instance_host, lb->job_list);
+        lb->job_list = NULL;
+        lb->job_count = 0;
     }
+
+    pthread_mutex_unlock(&lb->mutex);
 }
-
-
