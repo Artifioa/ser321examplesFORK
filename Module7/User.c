@@ -14,9 +14,6 @@
 #include <time.h>
 #include <unistd.h>
 #include "LoadBalancer.h"
-#include "InstanceHost.c"
-#include "LoadBalancer.c"
-#include "InstanceHost.h"
 
 //forward declarations for internal (private) functions.
 void* simulate_user_request(void* user_id);
