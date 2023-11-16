@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#ifndef INSTANCEHOST_H
+#define INSTANCEHOST_H
 
 // Structure to represent a server instance (thread)
 struct instance {
@@ -104,3 +106,5 @@ void host_request_instance(host* h, struct job_node* batch) {
 
     pthread_mutex_unlock(&h->mutex);
 }
+
+#endif /* INSTANCEHOST_H */
