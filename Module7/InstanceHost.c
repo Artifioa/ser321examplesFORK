@@ -80,7 +80,8 @@ void host_destroy(host** h) {
 }
 
 void host_request_instance(host* h, struct job_node* batch) {
-    pthread_mutex_lock(&h->mutex);
+    printf("LoadBalancer:Received batch and spinning up new instance.\n")
+    pthread_mutex_lock(&h->mutex); 
 
     // Create a new instance
     struct instance* new_instance = (struct instance*)malloc(sizeof(struct instance));
