@@ -70,7 +70,9 @@ void host_destroy(host** h) {
     struct instance* current_instance = (*h)->instances;
     while (current_instance != NULL) {
         pthread_join(current_instance->thread, NULL);
-        current_instance = current_instance->next;
+        struct instance* next_instance = current_instance->next; // Add this line
+        free(current_instance); // Add this line
+        current_instance = next_instance; // Add this line
     }
     pthread_mutex_unlock(&(*h)->mutex);
 
@@ -79,6 +81,7 @@ void host_destroy(host** h) {
     free(*h);
     *h = NULL;
 }
+
 
 void host_request_instance(host* h, struct job_node* batch) {
     printf("LoadBalancer:Received batch and spinning up new instance.\n")
