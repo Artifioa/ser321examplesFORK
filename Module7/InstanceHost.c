@@ -2,7 +2,10 @@
  * Implementation file for functions to simulate a cloud-like server instance
  * host.
  * 
- * @author Chase Molstad, Acuna
+ * @author Chase Molstad
+
+// Rest of the code goes here
+
  * @version 1.1
  */
 
@@ -11,8 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#ifndef INSTANCEHOST_H
-#define INSTANCEHOST_H
 
 // Structure to represent a server instance (thread)
 struct instance {
@@ -86,7 +87,7 @@ void host_destroy(host** h) {
 
 
 void host_request_instance(host* h, struct job_node* batch) {
-    printf("LoadBalancer:Received batch and spinning up new instance.\n")
+    printf("LoadBalancer:Received batch and spinning up new instance.\n");
     pthread_mutex_lock(&h->mutex); 
 
     // Create a new instance
@@ -106,5 +107,3 @@ void host_request_instance(host* h, struct job_node* batch) {
 
     pthread_mutex_unlock(&h->mutex);
 }
-
-#endif /* INSTANCEHOST_H */
