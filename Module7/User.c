@@ -66,12 +66,12 @@ void* simulate_user_request(void* user_id) {
     int ms = (rand() % 100) * 1000;
     nanosleep((struct timespec[]){{0, ms*1000000}}, NULL);
     
-    printf("User #%d: Wants to process data=%d and store it at %p.\n", (int)user_id, data, result);
+    printf("User #%d: Wants to process data=%d and store it at %p.\n", id, data, result);
     
     balancer_add_job(lb, id, data, result);
     while(*result == -1);
     
-    printf("User #%d: Received result from data=%d as result=%d.\n", (int)user_id, data, *result);
+    printf("User #%d: Received result from data=%d as result=%d.\n", id, data, *result);
     
     free(result);
     
