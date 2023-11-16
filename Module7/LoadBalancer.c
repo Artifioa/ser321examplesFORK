@@ -33,6 +33,7 @@ void balancer_destroy(balancer** lb) {
 }
 
 void balancer_add_job(balancer* lb, int user_id, int data, int* data_return) {
+    printf("LoadBalancer: Received new job from user #%d to process data = %d and store it at %p.\n",user_id,data,data_return);
     struct job_node* job = malloc(sizeof(struct job_node));
     job->user_id = user_id;
     job->data = data;

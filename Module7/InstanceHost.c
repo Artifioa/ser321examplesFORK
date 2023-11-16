@@ -38,6 +38,7 @@ void* process_job(void* arg) {
 }
 
 void host_request_instance(host* h, struct job_node* batch) {
+    printf("LoadBalancer: Received batch and spinning up new instance.\n");
     pthread_t thread;
     pthread_create(&thread, NULL, process_job, (void*) batch);
     pthread_detach(thread);
