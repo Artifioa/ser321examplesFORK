@@ -16,6 +16,7 @@
 struct instance {
     pthread_t thread;           // Thread representing the server instance
     struct job_node* current_job; // Current job being processed by the instance
+    struct instance* next;      // Pointer to the next instance in the list
 };
 
 // Structure to represent the host
