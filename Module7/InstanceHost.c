@@ -12,7 +12,7 @@
 #include "InstanceHost.h"
 #include <pthread.h>
 #include <stdlib.h>
-
+#include <stdio.h>
 struct host {
     pthread_mutex_t mutex;
     struct job_node* jobs;

@@ -9,6 +9,7 @@
 #include "LoadBalancer.h"
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 struct balancer {
     pthread_mutex_t mutex;
