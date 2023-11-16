@@ -44,7 +44,7 @@ int main() {
     //create number_of_requests number of users that want to square a number.
     for (int i = 0; i < number_of_requests; i++) {
         printf("creating: %d\n", i);
-        pthread_create(&threads[i], NULL, &simulate_user_request, (void*)i);
+        pthread_create(&threads[i], NULL, &simulate_user_request, (void*)(uintptr_t)i);
     }
 
     nanosleep((struct timespec[]){{2, 0}}, NULL); //wait two seconds
@@ -66,6 +66,7 @@ int main() {
  * @return 
  */
 void* simulate_user_request(void* user_id) {
+    uintptr_t user_id_int = (uintptr_t)user_id;
     int data = rand() % 100;
     int* result = (int*)malloc(sizeof(int));
     *result = -1;
