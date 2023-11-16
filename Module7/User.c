@@ -45,7 +45,7 @@ int main() {
 
     for (int i = 0; i < number_of_requests; i++) {
         printf("creating: %d\n", i);
-        pthread_create(&threads[i], NULL, &simulate_user_request, (void*)i);
+        pthread_create(&threads[i], NULL, &simulate_user_request, (void*)(intptr_t)i); // Cast i to intptr_t before casting to void*
     }
 
     for (int i = 0; i < number_of_requests; i++)
@@ -58,6 +58,7 @@ int main() {
 }
 
 void* simulate_user_request(void* user_id) {
+    intptr_t id = (intptr_t)user_id; // Use intptr_t instead of int
     int data = rand() % 100;
     int* result = (int*)malloc(sizeof(int));
     *result = -1;
@@ -67,7 +68,7 @@ void* simulate_user_request(void* user_id) {
     
     printf("User #%d: Wants to process data=%d and store it at %p.\n", (int)user_id, data, result);
     
-    balancer_add_job(lb, (int)user_id, data, result);
+    balancer_add_job(lb, id, data, result);
     while(*result == -1);
     
     printf("User #%d: Received result from data=%d as result=%d.\n", (int)user_id, data, *result);
