@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+}
+
+group 'com.yourgroup'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+task runClient(type: JavaExec) {
+    description = "Run Client"
+    main = 'client.Client'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+}
+
+task runLeader(type: JavaExec) {
+    description = "Run Leader"
+    main = 'leader.Leader'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task runNode(type: JavaExec) {
+    description = "Run Node"
+    main = 'node.Node'
+    classpath = sourceSets.main.runtimeClasspath
+    if (project.hasProperty('Faulty')) {
+        systemProperty 'Fault', project.getProperty('Faulty')
+    }
+}
