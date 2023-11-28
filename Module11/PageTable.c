@@ -58,7 +58,6 @@ void page_table_destroy(struct page_table** pt) {
 void page_table_access_page(struct page_table *pt, int page) {
     // Check if the page is valid
     static int current_time = 0;
-    current_time++;
     if (pt->entries[page].data & 1) {
         // The page is valid, so just increase the access count
         pt->entries[page].access_count++;
@@ -133,6 +132,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->entries[replace_frame].access_count = 1; // Reset the access count
         }
     }
+    current_time++;
 }
 
 void page_table_display(struct page_table* pt) {
