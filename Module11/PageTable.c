@@ -128,7 +128,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             }
 
             // Replace the frame
-            pt->entries[replace_frame].frame_number = page;
+            pt->entries[page].frame_number = replace_frame;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
         }
