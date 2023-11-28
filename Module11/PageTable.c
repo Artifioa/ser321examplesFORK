@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "PageTable.h"
+#include "DataLoader.c"
 
 struct page_table_entry {
     unsigned int data; // rightmost bit is valid/invalid bit, second bit from right is dirty bit
@@ -103,4 +104,39 @@ void page_table_display_contents(struct page_table *pt) {
     for (int i = 0; i < pt->page_count; i++) {
         printf("%d %d | %d %d\n", i, pt->entries[i].frame_number, (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
     }
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <filename>\n", argv[0]);
+        return 1;
+    }
+
+    struct test_scenario* scenario = load_test_data(argv[1]);
+    if (scenario == NULL) {
+        printf("Could not load test data\n");
+        return 1;
+    }
+
+    enum replacement_algorithm algorithms[] = {FIFO, LRU, MFU};
+    const char* algorithm_names[] = {"FIFO", "LRU", "MFU"};
+
+    for (int a = 0; a < 3; a++) {
+        struct page_table* pt = page_table_create(scenario->page_count, scenario->frame_count, algorithms[a], 1);
+        if (pt == NULL) {
+            printf("Could not create page table\n");
+            free(scenario);
+            return 1;
+        }
+
+        for (int i = 0; i < scenario->refstr_len; i++) {
+            page_table_access_page(pt, scenario->refstr[i]);
+        }
+        
+        page_table_display(pt);
+        page_table_destroy(&pt);
+    }
+
+    free(scenario);
+    return 0;
 }

@@ -37,3 +37,4 @@ struct test_scenario* load_test_data(char* filename) {
     fclose(file);
     return scenario;
 }
+
