@@ -30,7 +30,9 @@ struct page_table* page_table_create(int page_count, int frame_count, enum repla
     pt->algorithm = algorithm;
     pt->verbose = verbose;
     pt->page_faults = 0;
-    
+    pt->fifo_queue = createQueue(frame_count);
+    pt->lru_list = list_create(frame_count);
+    pt->mfu_queue = priority_queue_create(frame_count);
 
     // Initialize the entries
     for (int i = 0; i < page_count; i++) {
@@ -43,6 +45,13 @@ struct page_table* page_table_create(int page_count, int frame_count, enum repla
 }
 
 void page_table_destroy(struct page_table** pt) {
+    free((*pt)->fifo_queue->array);
+    free((*pt)->fifo_queue);
+    free((*pt)->lru_list->data);
+    free((*pt)->lru_list);
+    free((*pt)->mfu_queue->data);
+    free((*pt)->mfu_queue->priorities);
+    free((*pt)->mfu_queue);
     free((*pt)->entries);
     free(*pt);
     *pt = NULL;
