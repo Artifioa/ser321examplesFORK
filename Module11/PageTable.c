@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "PageTable.h"
 
 enum replacement_algorithm {
     FIFO,
