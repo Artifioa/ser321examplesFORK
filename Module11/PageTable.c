@@ -58,68 +58,52 @@ void page_table_destroy(struct page_table** pt) {
 
 
 void mfu(struct page_table *pt, int page) {
- int frames[10];
- int pages[30];
- int time[10];
- int count;
- int flag_1;
- int flag_2;
- for(int i = 0; i < pt->frame_count; i++) {
- frames[i] = -1;
- }
- pt->page_faults = 0;
- for(int i = 0; i < pt->page_count; i++) {
- count = 0;
- flag_1 = 0;
- flag_2 = 0;
- for(int j = 0; j < pt->frame_count; j++) {
- if(frames[j] == pages[i]) {
- count++;
- time[j] = count;
- flag_1 = 1;
- flag_2 = 1;
- break;
- }
- }
- if(flag_1 == 0) {
- for(int j = 0; j < pt->frame_count; j++) {
- if(frames[j] == -1) {
- count++;
- pt->page_faults++;
- frames[j] = pages[i];
- time[j] = count;
- flag_2 = 1;
- break;
- }
- }
- }
- if(flag_2 == 0) {
- int min = time[0];
- int pos = 0;
- for(int j = 0; j < pt->frame_count; j++) {
- if(time[j] < min) {
- min = time[j];
- pos = j;
- }
- count++;
- pt->page_faults++;
- frames[pos] = pages[j];
- time[pos] = count;
- break;
- }
- }
- }
-}
-
-int findLRU(int time[], int n) {
-    int i, minimum = time[0], pos = 0;
-    for(i = 1; i < n; ++i) {
-        if(time[i] < minimum) {
-            minimum = time[i];
-            pos = i;
+    int frames[10];
+    int pages[30];
+    int count[10];
+    int flag_1;
+    int flag_2;
+    for(int i = 0; i < pt->frame_count; i++) {
+        frames[i] = -1;
+        count[i] = 0;
+    }
+    pt->page_faults = 0;
+    for(int i = 0; i < pt->page_count; i++) {
+        flag_1 = 0;
+        flag_2 = 0;
+        for(int j = 0; j < pt->frame_count; j++) {
+            if(frames[j] == pages[i]) {
+                count[j]++;
+                flag_1 = 1;
+                flag_2 = 1;
+                break;
+            }
+        }
+        if(flag_1 == 0) {
+            for(int j = 0; j < pt->frame_count; j++) {
+                if(frames[j] == -1) {
+                    pt->page_faults++;
+                    frames[j] = pages[i];
+                    count[j] = 1;
+                    flag_2 = 1;
+                    break;
+                }
+            }
+        }
+        if(flag_2 == 0) {
+            int max = count[0];
+            int pos = 0;
+            for(int j = 0; j < pt->frame_count; j++) {
+                if(count[j] > max) {
+                    max = count[j];
+                    pos = j;
+                }
+            }
+            pt->page_faults++;
+            frames[pos] = pages[i];
+            count[pos] = 1;
         }
     }
-    return pos;
 }
 
 void lru(struct page_table *pt, int page) {
@@ -169,6 +153,17 @@ void lru(struct page_table *pt, int page) {
             time[pos] = i;
         }
     }
+}
+
+int findLRU(int time[], int n) {
+    int i, minimum = time[0], pos = 0;
+    for(i = 1; i < n; ++i) {
+        if(time[i] < minimum) {
+            minimum = time[i];
+            pos = i;
+        }
+    }
+    return pos;
 }
 
 void fifo(struct page_table *pt, int page) {
@@ -289,6 +284,6 @@ void page_table_display(struct page_table* pt) {
 void page_table_display_contents(struct page_table *pt) {
     printf("page frame | dirty valid\n");
     for (int i = 0; i < pt->page_count; i++) {
-        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
+        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, pt->entries[i].data & 2 ? 1 : 0, pt->entries[i].data & 1 ? 1 : 0);
     }
 }
