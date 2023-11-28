@@ -105,14 +105,12 @@ int isEmpty(Queue* queue) {
 }
 
 void enqueue(Queue* queue, int item) {
-    if (isFull(queue)) return;
     queue->rear = (queue->rear + 1) % queue->capacity;
     queue->array[queue->rear] = item;
     queue->size = queue->size + 1;
 }
 
 int queue_pop(Queue* queue) {
-    if (isEmpty(queue)) return;
     int item = queue->array[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
     queue->size = queue->size - 1;
@@ -120,14 +118,12 @@ int queue_pop(Queue* queue) {
 }
 
 void queue_push(Queue* queue, int item) {
-    if (isFull(queue)) return;
     queue->rear = (queue->rear + 1) % queue->capacity;
     queue->array[queue->rear] = item;
     queue->size = queue->size + 1;
 }
 
 int dequeue(Queue* queue) {
-    if (isEmpty(queue)) return;
     int item = queue->array[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
     queue->size = queue->size - 1;
@@ -135,12 +131,10 @@ int dequeue(Queue* queue) {
 }
 
 int front(Queue* queue) {
-    if (isEmpty(queue)) return;
     return queue->array[queue->front];
 }
 
 int rear(Queue* queue) {
-    if (isEmpty(queue)) return;
     return queue->array[queue->rear];
 }
 
@@ -160,7 +154,6 @@ struct list* list_create(int capacity) {
 }
 
 void list_push_back(struct list* l, int item) {
-    if (l->size == l->capacity) return;
     l->data[l->size++] = item;
 }
 
@@ -176,7 +169,6 @@ void list_remove(struct list* l, int item) {
 }
 
 int list_pop_front(struct list* l) {
-    if (l->size == 0) return;
     int item = l->data[0];
     list_remove(l, item);
     return item;
@@ -200,7 +192,6 @@ struct priority_queue* priority_queue_create(int capacity) {
 }
 
 void priority_queue_push(struct priority_queue* pq, int item, int priority) {
-    if (pq->size == pq->capacity) return;
     pq->data[pq->size] = item;
     pq->priorities[pq->size] = priority;
     pq->size++;
@@ -216,7 +207,6 @@ void priority_queue_increase(struct priority_queue* pq, int item) {
 }
 
 int priority_queue_pop(struct priority_queue* pq) {
-    if (pq->size == 0) return;
     int max_priority_index = 0;
     for (int i = 1; i < pq->size; i++) {
         if (pq->priorities[i] > pq->priorities[max_priority_index]) {
