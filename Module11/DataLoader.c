@@ -2,13 +2,6 @@
 #include <stdlib.h>
 #include "DataLoader.h"
 
-struct test_scenario {
-    int* reference_string;
-    int reference_string_length;
-    int num_pages;
-    int num_frames;
-};
-
 struct test_scenario* load_test_data(char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
@@ -24,20 +17,21 @@ struct test_scenario* load_test_data(char* filename) {
     }
 
     // Read the number of pages, frames, and entries from the file
-    fscanf(file, "%d", &(scenario->num_pages));
-    fscanf(file, "%d", &(scenario->num_frames));
-    fscanf(file, "%d", &(scenario->reference_string_length));
+    fscanf(file, "%d", &(scenario->page_count));
+    fscanf(file, "%d", &(scenario->frame_count));
+    fscanf(file, "%d", &(scenario->refstr_len));
 
-    scenario->reference_string = malloc(sizeof(int) * scenario->reference_string_length);
-    if (scenario->reference_string == NULL) {
-        printf("Could not allocate memory for reference string\n");
+    // Ensure that refstr_len does not exceed the size of the array
+    if (scenario->refstr_len > 512) {
+        printf("Reference string length exceeds size of the array\n");
         free(scenario);
         fclose(file);
         return NULL;
     }
 
-    for (int i = 0; i < scenario->reference_string_length; i++) {
-        fscanf(file, "%d", &(scenario->reference_string[i]));
+    // Read the entries into the array
+    for (int i = 0; i < scenario->refstr_len; i++) {
+        fscanf(file, "%d", &(scenario->refstr[i]));
     }
 
     fclose(file);

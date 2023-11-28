@@ -2,12 +2,6 @@
 #include <stdlib.h>
 #include "PageTable.h"
 
-enum replacement_algorithm {
-    FIFO,
-    LRU,
-    MFU
-};
-
 struct page_table_entry {
     unsigned int data; // rightmost bit is valid/invalid bit, second bit from right is dirty bit
     int frame_number;
