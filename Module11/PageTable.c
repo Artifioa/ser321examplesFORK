@@ -131,6 +131,15 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->entries[page].frame_number = replace_frame;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
+
+            // Invalidate the replaced page
+            for (int i = 0; i < pt->page_count; i++) {
+                if (pt->entries[i].frame_number == replace_frame && i != page) {
+                    pt->entries[i].data &= ~1; // Clear the valid bit
+                    pt->entries[i].frame_number = -1; // Mark the frame as free
+                    break;
+                }
+            }
         }
     }
 }
