@@ -118,6 +118,7 @@ void page_table_display(struct page_table* pt) {
 void page_table_display_contents(struct page_table *pt) {
     printf("page frame | dirty valid\n");
     for (int i = 0; i < pt->page_count; i++) {
-        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
+        printf("%d %d | %d %d\n", i, pt->entries[i].frame_number,
+               (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
     }
 }
