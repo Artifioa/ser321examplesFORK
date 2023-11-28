@@ -21,6 +21,49 @@ struct page_table {
 
 };
 
+struct page_table* page_table_create(int page_count, int frame_count, enum replacement_algorithm algorithm, int verbose) {
+    // Allocate memory for the page table
+    struct page_table* pt = malloc(sizeof(struct page_table));
+    pt->entries = malloc(sizeof(struct page_table_entry) * page_count);
+    pt->page_count = page_count;
+    pt->frame_count = frame_count;
+    pt->algorithm = algorithm;
+    pt->verbose = verbose;
+    pt->page_faults = 0;
+    
+
+    // Initialize the entries
+    for (int i = 0; i < page_count; i++) {
+        pt->entries[i].frame_number = -1; // Indicate that the frame is free
+        pt->entries[i].data = 0; // Clear the valid and dirty bits
+        pt->entries[i].access_count = 0; // Reset the access count
+    }
+
+    return pt;
+}
+
+void page_table_destroy(struct page_table** pt) {
+    free((*pt)->entries);
+    free(*pt);
+    *pt = NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -69,7 +112,7 @@ void enqueue(Queue* queue, int item) {
 }
 
 int queue_pop(Queue* queue) {
-    if (isEmpty(queue)) return INT_MIN;
+    if (isEmpty(queue)) return;
     int item = queue->array[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
     queue->size = queue->size - 1;
@@ -84,7 +127,7 @@ void queue_push(Queue* queue, int item) {
 }
 
 int dequeue(Queue* queue) {
-    if (isEmpty(queue)) return INT_MIN;
+    if (isEmpty(queue)) return;
     int item = queue->array[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
     queue->size = queue->size - 1;
@@ -92,12 +135,12 @@ int dequeue(Queue* queue) {
 }
 
 int front(Queue* queue) {
-    if (isEmpty(queue)) return INT_MIN;
+    if (isEmpty(queue)) return;
     return queue->array[queue->front];
 }
 
 int rear(Queue* queue) {
-    if (isEmpty(queue)) return INT_MIN;
+    if (isEmpty(queue)) return;
     return queue->array[queue->rear];
 }
 
@@ -133,7 +176,7 @@ void list_remove(struct list* l, int item) {
 }
 
 int list_pop_front(struct list* l) {
-    if (l->size == 0) return INT_MIN;
+    if (l->size == 0) return;
     int item = l->data[0];
     list_remove(l, item);
     return item;
@@ -173,7 +216,7 @@ void priority_queue_increase(struct priority_queue* pq, int item) {
 }
 
 int priority_queue_pop(struct priority_queue* pq) {
-    if (pq->size == 0) return INT_MIN;
+    if (pq->size == 0) return;
     int max_priority_index = 0;
     for (int i = 1; i < pq->size; i++) {
         if (pq->priorities[i] > pq->priorities[max_priority_index]) {
@@ -210,32 +253,28 @@ int priority_queue_pop(struct priority_queue* pq) {
 
 
 
-struct page_table* page_table_create(int page_count, int frame_count, enum replacement_algorithm algorithm, int verbose) {
-    // Allocate memory for the page table
-    struct page_table* pt = malloc(sizeof(struct page_table));
-    pt->entries = malloc(sizeof(struct page_table_entry) * page_count);
-    pt->page_count = page_count;
-    pt->frame_count = frame_count;
-    pt->algorithm = algorithm;
-    pt->verbose = verbose;
-    pt->page_faults = 0;
-    
 
-    // Initialize the entries
-    for (int i = 0; i < page_count; i++) {
-        pt->entries[i].frame_number = -1; // Indicate that the frame is free
-        pt->entries[i].data = 0; // Clear the valid and dirty bits
-        pt->entries[i].access_count = 0; // Reset the access count
-    }
 
-    return pt;
-}
 
-void page_table_destroy(struct page_table** pt) {
-    free((*pt)->entries);
-    free(*pt);
-    *pt = NULL;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void page_table_access_page(struct page_table *pt, int page) {
     // Check if the page is valid
