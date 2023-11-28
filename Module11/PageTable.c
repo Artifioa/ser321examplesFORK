@@ -58,52 +58,57 @@ void page_table_destroy(struct page_table** pt) {
 
 
 void mfu(struct page_table *pt, int page) {
-    int frames[10];
-    int pages[30];
-    int count[10];
-    int flag_1;
-    int flag_2;
-    for(int i = 0; i < pt->frame_count; i++) {
-        frames[i] = -1;
-        count[i] = 0;
-    }
-    pt->page_faults = 0;
-    for(int i = 0; i < pt->page_count; i++) {
-        flag_1 = 0;
-        flag_2 = 0;
-        for(int j = 0; j < pt->frame_count; j++) {
-            if(frames[j] == pages[i]) {
-                count[j]++;
-                flag_1 = 1;
-                flag_2 = 1;
-                break;
-            }
-        }
-        if(flag_1 == 0) {
-            for(int j = 0; j < pt->frame_count; j++) {
-                if(frames[j] == -1) {
-                    pt->page_faults++;
-                    frames[j] = pages[i];
-                    count[j] = 1;
-                    flag_2 = 1;
-                    break;
-                }
-            }
-        }
-        if(flag_2 == 0) {
-            int max = count[0];
-            int pos = 0;
-            for(int j = 0; j < pt->frame_count; j++) {
-                if(count[j] > max) {
-                    max = count[j];
-                    pos = j;
-                }
-            }
-            pt->page_faults++;
-            frames[pos] = pages[i];
-            count[pos] = 1;
-        }
-    }
+ int frames[10];
+ int pages[30];
+ int time[10];
+ int count;
+ int flag_1;
+ int flag_2;
+ for(int i = 0; i < pt->frame_count; i++) {
+ frames[i] = -1;
+ }
+ pt->page_faults = 0;
+ for(int i = 0; i < pt->page_count; i++) {
+ count = 0;
+ flag_1 = 0;
+ flag_2 = 0;
+ for(int j = 0; j < pt->frame_count; j++) {
+ if(frames[j] == pages[i]) {
+ count++;
+ time[j] = count;
+ flag_1 = 1;
+ flag_2 = 1;
+ break;
+ }
+ }
+ if(flag_1 == 0) {
+ for(int j = 0; j < pt->frame_count; j++) {
+ if(frames[j] == -1) {
+ count++;
+ pt->page_faults++;
+ frames[j] = pages[i];
+ time[j] = count;
+ flag_2 = 1;
+ break;
+ }
+ }
+ }
+ if(flag_2 == 0) {
+ int min = time[0];
+ int pos = 0;
+ for(int j = 0; j < pt->frame_count; j++) {
+ if(time[j] < min) {
+ min = time[j];
+ pos = j;
+ }
+ count++;
+ pt->page_faults++;
+ frames[pos] = pages[j];
+ time[pos] = count;
+ break;
+ }
+ }
+ }
 }
 
 int findLRU(int time[], int n) {
