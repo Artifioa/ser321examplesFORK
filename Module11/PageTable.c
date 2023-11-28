@@ -218,15 +218,15 @@ void page_table_access_page(struct page_table *pt, int page) {
         pt->page_faults++;
 
         // Find the first free frame
-        int free_frame = -1;
+        int free_frame = 0;
         for (int i = 0; i < pt->frame_count; i++) {
-            if (pt->entries[i].frame_number == -1) {
+            if (pt->entries[i].frame_number == 0) {
                 free_frame = i;
                 break;
             }
         }
 
-        if (free_frame != -1) {
+        if (free_frame != 0) {
             // Found a free frame
             pt->entries[page].frame_number = free_frame;
             pt->entries[free_frame].data |= 1; // Set the valid bit
