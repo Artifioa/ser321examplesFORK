@@ -80,43 +80,42 @@ void page_table_access_page(struct page_table *pt, int page) {
                         break;
                     case LRU:
                         // LRU replacement logic: Replace the least recently used frame
-                        for (int i = 1; i < pt->frame_count; i++) {
-                            if (pt->entries[i].access_count < pt->entries[replace_frame].access_count ||
-                                (pt->entries[i].access_count == pt->entries[replace_frame].access_count && i < replace_frame)) {
-                                replace_frame = i;
-                            }
+                        if (pt->entries[i].access_count < pt->entries[replace_frame].access_count) {
+                            replace_frame = i;
                         }
                         break;
                     case MFU:
                         // MFU replacement logic: Replace the most frequently used frame
-                        for (int i = 1; i < pt->frame_count; i++) {
-                            if (pt->entries[i].access_count > pt->entries[replace_frame].access_count ||
-                                (pt->entries[i].access_count == pt->entries[replace_frame].access_count && i < replace_frame)) {
-                                replace_frame = i;
-                            }
+                        if (pt->entries[i].access_count > pt->entries[replace_frame].access_count) {
+                            replace_frame = i;
                         }
                         break;
                 }
             }
 
+            // Save the replaced page
+            int replaced_page = pt->entries[replace_frame].frame_number;
+
             // Invalidate the old page
-            int replaced_page = pt->entries[replace_frame].frame_number; // Save the replaced page
             pt->entries[replace_frame].data &= ~1; // Clear the valid bit
             pt->entries[replace_frame].frame_number = page;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
 
-            // Update the replaced page entry
-            for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == replaced_page) {
-                    pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->entries[i].frame_number = -1; // Mark the frame as free
-                    break;
+            // Update the replaced page entry if it is not -1
+            if (replaced_page != -1) {
+                for (int i = 0; i < pt->page_count; i++) {
+                    if (pt->entries[i].frame_number == replaced_page) {
+                        pt->entries[i].data &= ~1; // Clear the valid bit
+                        pt->entries[i].frame_number = -1; // Mark the frame as free
+                        break;
+                    }
                 }
             }
         }
     }
 }
+
 
 void page_table_display(struct page_table* pt) {
     printf("==== Page Table ====\n");
