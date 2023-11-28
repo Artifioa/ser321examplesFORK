@@ -236,6 +236,7 @@ void page_table_display(struct page_table* pt) {
  printf("Mode: %s\n", getMode(pt));
  printf("Page Faults: %d\n", pt->page_fault_count);
  printf("page frame | dirty valid\n");
+page_table_display_contents(pt);
 }
 /**
  * Displays the current contents of the page table.
