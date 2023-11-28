@@ -15,9 +15,6 @@ struct page_table {
     enum replacement_algorithm algorithm;
     int verbose;
     int page_faults;
-    struct queue* fifo_queue; // for FIFO
-    struct list* lru_list; // for LRU
-    int* mfu_counts; // for MFU
 };
 
 struct page_table* page_table_create(int page_count, int frame_count, enum replacement_algorithm algorithm, int verbose) {
@@ -46,19 +43,11 @@ void page_table_destroy(struct page_table** pt) {
     *pt = NULL;
 }
 
-void page_table_access_page(struct page_table *pt, int page, int write) {
+void page_table_access_page(struct page_table *pt, int page) {
     // Check if the page is valid
     if (pt->entries[page].data & 1) {
         // The page is valid, so just increase the access count
         pt->entries[page].access_count++;
-        if (pt->algorithm == LRU) {
-            // Move the page to the back of the LRU list
-            move_to_back(pt->lru_list, page);
-        }
-        if (write) {
-            // Set the dirty bit
-            pt->entries[page].data |= 2;
-        }
     } else {
         // The page is not valid, so we have a page fault
         pt->page_faults++;
@@ -72,36 +61,50 @@ void page_table_access_page(struct page_table *pt, int page, int write) {
             }
         }
 
-        if (free_frame == -1) {
-            // No free frame, need to replace a page
-            int replace_page;
-            if (pt->algorithm == FIFO) {
-                replace_page = dequeue(pt->fifo_queue);
-            } else if (pt->algorithm == LRU) {
-                replace_page = remove_front(pt->lru_list);
-            } else if (pt->algorithm == MFU) {
-                replace_page = find_max(pt->mfu_counts);
+        if (free_frame != -1) {
+            // Found a free frame
+            pt->entries[free_frame].frame_number = page;
+            pt->entries[free_frame].data |= 1; // Set the valid bit
+            pt->entries[free_frame].access_count = 1; // Reset the access count
+        } else {
+            // There are no free frames
+            int replace_frame = 0;
+            switch (pt->algorithm) {
+                case FIFO:
+                    // Replace the first frame
+                    replace_frame = 0;
+                    break;
+                case LRU:
+                    // Replace the least recently used frame
+                    for (int i = 1; i < pt->page_count; i++) {
+                        if (pt->entries[i].access_count < pt->entries[replace_frame].access_count) {
+                            replace_frame = i;
+                        }
+                    }
+                    break;
+                case MFU:
+                    // Replace the most frequently used frame
+                    for (int i = 1; i < pt->page_count; i++) {
+                        if (pt->entries[i].access_count > pt->entries[replace_frame].access_count) {
+                            replace_frame = i;
+                        }
+                    }
+                    break;
             }
-            pt->entries[replace_page].data &= ~1; // Set valid bit to 0
-            pt->entries[replace_page].frame_number = -1;
-            free_frame = replace_page;
-        }
 
-        // Load the page into the free frame
-        pt->entries[page].frame_number = free_frame;
-        pt->entries[page].data |= 1; // Set the valid bit
+            // Invalidate the old page
+            for (int i = 0; i < pt->page_count; i++) {
+                if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
+                    pt->entries[i].data &= ~1; // Clear the valid bit
+                    pt->entries[i].frame_number = -1; // Mark the frame as free
+                    break;
+                }
+            }
 
-        if (pt->algorithm == FIFO) {
-            // Add the page to the FIFO queue
-            enqueue(pt->fifo_queue, page);
-        } else if (pt->algorithm == LRU) {
-            // Add the page to the LRU list
-            add_to_back(pt->lru_list, page);
-        }
-
-        if (write) {
-            // Set the dirty bit
-            pt->entries[page].data |= 2;
+            // Replace the frame
+            pt->entries[replace_frame].frame_number = page;
+            pt->entries[replace_frame].data |= 1; // Set the valid bit
+            pt->entries[replace_frame].access_count = 1; // Reset the access count
         }
     }
 }
