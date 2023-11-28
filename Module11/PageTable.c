@@ -54,8 +54,8 @@ void page_table_access_page(struct page_table *pt, int page) {
 
         // Find the first free frame
         int free_frame = -1;
-        for (int i = 0; i < pt->page_count; i++) {
-            if (!(pt->entries[i].data & 1)) {
+        for (int i = 0; i < pt->frame_count; i++) {
+            if (pt->entries[i].frame_number == -1) {
                 free_frame = i;
                 break;
             }
