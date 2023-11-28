@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "PageTable.h"
-#include "DataLoader.h"
 
 struct page_table_entry {
     unsigned int data; // rightmost bit is valid/invalid bit, second bit from right is dirty bit
@@ -35,7 +34,6 @@ void page_table_destroy(struct page_table** pt) {
     free(*pt);
     *pt = NULL;
 }
-
 void page_table_access_page(struct page_table *pt, int page) {
     // Check if the page is valid
     if (pt->entries[page].data & 1) {
@@ -47,7 +45,7 @@ void page_table_access_page(struct page_table *pt, int page) {
 
         // Find the first free frame
         int free_frame = -1;
-        for (int i = 0; i < pt->frame_count; i++) {
+        for (int i = 0; i < pt->page_count; i++) {
             if (!(pt->entries[i].data & 1)) {
                 free_frame = i;
                 break;
@@ -58,6 +56,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             // Found a free frame
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
+            pt->entries[free_frame].access_count = 1; // Reset the access count
         } else {
             // There are no free frames
             int replace_frame = 0;
@@ -68,7 +67,7 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
                 case LRU:
                     // Replace the least recently used frame
-                    for (int i = 1; i < pt->frame_count; i++) {
+                    for (int i = 1; i < pt->page_count; i++) {
                         if (pt->entries[i].access_count < pt->entries[replace_frame].access_count) {
                             replace_frame = i;
                         }
@@ -76,7 +75,7 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
                 case MFU:
                     // Replace the most frequently used frame
-                    for (int i = 1; i < pt->frame_count; i++) {
+                    for (int i = 1; i < pt->page_count; i++) {
                         if (pt->entries[i].access_count > pt->entries[replace_frame].access_count) {
                             replace_frame = i;
                         }
@@ -84,7 +83,15 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
             }
 
-            // Should replace the frame
+            // Invalidate the old page
+            for (int i = 0; i < pt->page_count; i++) {
+                if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
+                    pt->entries[i].data &= ~1; // Clear the valid bit
+                    break;
+                }
+            }
+
+            // Replace the frame
             pt->entries[replace_frame].frame_number = page;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
