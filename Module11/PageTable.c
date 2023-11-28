@@ -1,123 +1,245 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "PageTable.h"
-
 struct page_table_entry {
-    unsigned int data; // rightmost bit is valid/invalid bit, second bit from right is dirty bit
-    int frame_number;
-    int access_count; // for LRU and MFU
+ unsigned int dirty_valid;
+ int frameNum;
+ int pageNum;
+ int order;
+ int last;
+ int freq;
+ struct page_table_entry *next;
 };
-
 struct page_table {
-    struct page_table_entry* entries;
-    int page_count;
-    int frame_count;
-    enum replacement_algorithm algorithm;
-    int verbose;
-    int page_faults;
+ enum replacement_algorithm mode;
+ int page_fault_count;
+ int pageCount;
+ int frameCount;
+ int verbose;
+ unsigned int dirty_valid;
+ int frameNum;
+ int pageNum;
+ struct page_table_entry *pte_head;
 };
-
-struct page_table* page_table_create(int page_count, int frame_count, enum replacement_algorithm algorithm, int verbose) {
-    // Allocate memory for the page table
-    struct page_table* pt = malloc(sizeof(struct page_table));
-    pt->entries = malloc(sizeof(struct page_table_entry) * page_count);
-    pt->page_count = page_count;
-    pt->frame_count = frame_count;
-    pt->algorithm = algorithm;
-    pt->verbose = verbose;
-    pt->page_faults = 0;
-
-    // Initialize the entries
-    for (int i = 0; i < page_count; i++) {
-        pt->entries[i].frame_number = -1; // Indicate that the frame is free
-        pt->entries[i].data = 0; // Clear the valid and dirty bits
-        pt->entries[i].access_count = 0; // Reset the access count
-    }
-
-    return pt;
+/**
+ * Prints a given table
+ *
+ * @param page_table to print
+ */
+char* getMode(struct page_table* p) {
+ if (p->mode == FIFO) {
+ return "FIFO";
+ } else if (p->mode == LRU) {
+ return "LRU";
+ } else if (p->mode == MFU) {
+ return "MFU";
+ }
+ return "unknown";
 }
-
+void mfu(struct page_table *pt, int page) {
+ int frames[10];
+ int pages[30];
+ int time[10];
+ int count;
+ int flag_1;
+ int flag_2;
+ for(int i = 0; i < pt->frameCount; i++) {
+This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
+https://www.coursehero.com/file/181616670/OjhaPageTablec/
+ frames[i] = -1;
+ }
+ pt->page_fault_count = 0;
+ for(int i = 0; i < pt->pageCount; i++) {
+ count = 0;
+ flag_1 = 0;
+ flag_2 = 0;
+ for(int j = 0; j < pt->frameCount; j++) {
+ if(frames[j] == pages[i]) {
+ count++;
+ time[j] = count;
+ flag_1 = 1;
+ flag_2 = 1;
+ break;
+ }
+ }
+ if(flag_1 == 0) {
+ for(int j = 0; j < pt->frameCount; j++) {
+ if(frames[j] == -1) {
+ count++;
+ pt->page_fault_count++;
+ frames[j] = pages[i];
+ time[j] = count;
+ flag_2 = 1;
+ break;
+ }
+ }
+ }
+ if(flag_2 == 0) {
+ int min = time[0];
+ int pos = 0;
+ for(int j = 0; j < pt->frameCount; j++) {
+ if(time[j] < min) {
+ min = time[j];
+ pos = j;
+ }
+ count++;
+ pt->page_fault_count++;
+ frames[pos] = pages[j];
+ time[pos] = count;
+ break;
+ }
+ }
+ }
+}
+void fifo(struct page_table *pt, int page) {
+ int temp[pt->frameCount];
+ for(int i = 0; i < pt->frameCount; i++) {
+ temp[i] = -1;
+ }
+ int count;
+ for(int i = 0; i < pt->pageCount; i++) {
+ count = 0;
+ for(int j = 0; j < pt->frameCount; j++) {
+This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
+https://www.coursehero.com/file/181616670/OjhaPageTablec/
+ if(page == temp[j]) {
+ count++;
+ pt->page_fault_count--;
+ }
+ }
+ pt->page_fault_count++;
+ if(count == 0) {
+ if(pt->page_fault_count <= pt->frameCount) {
+ temp[i] = page;
+ } else {
+ temp[(pt->page_fault_count - 1) % pt->frameCount] = page;
+ }
+ }
+ }
+}
+void lru(struct page_table *pt, int page) {
+ int frames[10];
+ int pages[30];
+ int time[10];
+ int count;
+ int flag_1;
+ int flag_2;
+ for(int i = 0; i < pt->frameCount; i++) {
+ frames[i] = -1;
+ }
+ pt->page_fault_count = 0;
+ for(int i = 0; i < pt->pageCount; i++) {
+ count = 0;
+ flag_1 = 0;
+ flag_2 = 0;
+ for(int j = 0; j < pt->frameCount; j++) {
+ if(frames[j] == pages[i]) {
+ count++;
+ time[j] = count;
+ flag_1 = 1;
+ flag_2 = 1;
+ break;
+ }
+ }
+ if(flag_1 == 0) {
+ for(int j = 0; j < pt->frameCount; j++) {
+ if(frames[j] == -1) {
+ count++;
+ pt->page_fault_count++;
+ frames[j] = pages[i];
+ time[j] = count;
+ flag_2 = 1;
+ break;
+ }
+ }
+ }
+ if(flag_2 == 0) {
+ int min = time[0];
+ int pos = 0;
+This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
+https://www.coursehero.com/file/181616670/OjhaPageTablec/
+ for(int j = 0; j < pt->frameCount; j++) {
+ if(time[j] < min) {
+ min = time[j];
+ pos = j;
+ }
+ count++;
+ pt->page_fault_count++;
+ frames[pos] = pages[j];
+ time[pos] = count;
+ break;
+ }
+ }
+ }
+}
+/**
+ * Creates a new page table object. Returns a pointer to created page table.
+ *
+ * @param pageCount Number of pages.
+ * @param frameCount Numbers of frames.
+ * @param algorithm Page replacement algorithm
+ * @param verbose Enables showing verbose table contents.
+ * @return A page table object.
+ */
+struct page_table* page_table_create(int pageCount, int frameCount, enum
+replacement_algorithm algorithm, int verbose) {
+ struct page_table *pt = (struct page_table*)malloc(sizeof(struct page_table));
+ pt->pte_head = (struct page_table_entry*)malloc(sizeof(struct
+page_table_entry*));
+ pt->pageCount = pageCount;
+ pt->frameCount = frameCount;
+ pt->mode = algorithm;
+ pt->verbose = verbose;
+ return pt;
+}
+/**
+ * Destorys an existing page table object. Sets outside variable to NULL.
+ *
+ * @param pt A page table object.
+ */
 void page_table_destroy(struct page_table** pt) {
-    free((*pt)->entries);
-    free(*pt);
-    *pt = NULL;
+ struct page_table* pt_temp = *pt;
+ free(pt_temp->pte_head);
+ free(pt_temp);
+ pt = NULL;
 }
-
+/**
+ * Simulates an instruction accessing a particular page in the page table.
+ *
+ * @param pt A page table object.
+ * @param page The page being accessed.
+ */
 void page_table_access_page(struct page_table *pt, int page) {
-    // Check if the page is valid
-    if (pt->entries[page].data & 1) {
-        // The page is valid, so just increase the access count
-        pt->entries[page].access_count++;
-    } else {
-        // The page is not valid, so we have a page fault
-        pt->page_faults++;
-
-        // Find the first free frame
-        int free_frame = -1;
-        for (int i = 0; i < pt->frame_count; i++) {
-            if (pt->entries[i].frame_number == -1) {
-                free_frame = i;
-                break;
-            }
-        }
-
-        if (free_frame != -1) {
-            // Found a free frame
-            pt->entries[page].frame_number = free_frame;
-            pt->entries[page].data |= 1; // Set the valid bit
-        } else {
-            // There are no free frames
-            int replace_frame = 0;
-            switch (pt->algorithm) {
-                case FIFO:
-                    // Replace the first frame
-                    replace_frame = 0;
-                    break;
-                case LRU:
-                    // Replace the least recently used frame
-                    for (int i = 1; i < pt->page_count; i++) {
-                        if (pt->entries[i].access_count < pt->entries[replace_frame].access_count) {
-                            replace_frame = i;
-                        }
-                    }
-                    break;
-                case MFU:
-                    // Replace the most frequently used frame
-                    for (int i = 1; i < pt->page_count; i++) {
-                        if (pt->entries[i].access_count > pt->entries[replace_frame].access_count) {
-                            replace_frame = i;
-                        }
-                    }
-                    break;
-            }
-
-            // Invalidate the old page
-            for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == replace_frame) {
-                    pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->entries[i].frame_number = -1; // Mark the frame as free
-                    break;
-                }
-            }
-
-            // Replace the frame
-            pt->entries[page].frame_number = replace_frame;
-            pt->entries[page].data |= 1; // Set the valid bit
-            pt->entries[page].access_count = 1; // Reset the access count
-        }
-    }
+ if(pt->mode == FIFO) {
+ fifo(pt, page);
+This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
+https://www.coursehero.com/file/181616670/OjhaPageTablec/
+ } else if(pt->mode == LRU) {
+ lru(pt, page);
+ } else if(pt->mode == MFU) {
+ mfu(pt, page);
+ }
 }
-
+/**
+ * Displays page table replacement algorithm, number of page faults, and the
+ * current contents of the page table.
+ *
+ * @param pt A page table object.
+ */
 void page_table_display(struct page_table* pt) {
-    printf("==== Page Table ====\n");
-    printf("Mode : %s\n", pt->algorithm == FIFO ? "FIFO" : pt->algorithm == LRU ? "LRU" : "MFU");
-    printf("Page Faults : %d\n", pt->page_faults);
-    page_table_display_contents(pt);
+ printf("====Page Table====\n");
+ printf("Mode: %s\n", getMode(pt));
+ printf("Page Faults: %d\n", pt->page_fault_count);
+ printf("page frame | dirty valid\n");
 }
-
-void page_table_display_contents(struct page_table *pt) {
-    printf("page frame | dirty valid\n");
-    for (int i = 0; i < pt->page_count; i++) {
-        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
-    }
+/**
+ * Displays the current contents of the page table.
+ *
+ * @param pt A page table object.
+ */
+void page_table_display_contents(struct page_table *pt){
+ struct page_table_entry* pte = pt->pte_head;
+ printf(" %d %d | %d %d\n",
+ pt->pageCount, pt->frameNum,
+ 0, pt->dirty_valid);
 }
