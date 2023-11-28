@@ -106,6 +106,17 @@ void mfu(struct page_table *pt, int page) {
     }
 }
 
+int findLRU(int time[], int n) {
+    int i, minimum = time[0], pos = 0;
+    for(i = 1; i < n; ++i) {
+        if(time[i] < minimum) {
+            minimum = time[i];
+            pos = i;
+        }
+    }
+    return pos;
+}
+
 void lru(struct page_table *pt, int page) {
     int frames[10];
     int pages[30];
@@ -153,17 +164,6 @@ void lru(struct page_table *pt, int page) {
             time[pos] = i;
         }
     }
-}
-
-int findLRU(int time[], int n) {
-    int i, minimum = time[0], pos = 0;
-    for(i = 1; i < n; ++i) {
-        if(time[i] < minimum) {
-            minimum = time[i];
-            pos = i;
-        }
-    }
-    return pos;
 }
 
 void fifo(struct page_table *pt, int page) {
