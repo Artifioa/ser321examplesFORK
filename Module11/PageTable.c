@@ -1,3 +1,10 @@
+/**
+ * Simulates Page Tables
+ *
+ *
+ * @author Palak Ojha
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include "PageTable.h"
@@ -44,8 +51,6 @@ void mfu(struct page_table *pt, int page) {
  int flag_1;
  int flag_2;
  for(int i = 0; i < pt->frameCount; i++) {
-This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
-https://www.coursehero.com/file/181616670/OjhaPageTablec/
  frames[i] = -1;
  }
  pt->page_fault_count = 0;
@@ -92,31 +97,35 @@ https://www.coursehero.com/file/181616670/OjhaPageTablec/
  }
 }
 void fifo(struct page_table *pt, int page) {
- int temp[pt->frameCount];
- for(int i = 0; i < pt->frameCount; i++) {
- temp[i] = -1;
- }
- int count;
- for(int i = 0; i < pt->pageCount; i++) {
- count = 0;
- for(int j = 0; j < pt->frameCount; j++) {
-This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
-https://www.coursehero.com/file/181616670/OjhaPageTablec/
- if(page == temp[j]) {
- count++;
- pt->page_fault_count--;
- }
- }
- pt->page_fault_count++;
- if(count == 0) {
- if(pt->page_fault_count <= pt->frameCount) {
- temp[i] = page;
- } else {
- temp[(pt->page_fault_count - 1) % pt->frameCount] = page;
- }
- }
- }
+    static int *temp = NULL;
+    static int oldest_page_index = 0;
+
+    if (temp == NULL) {
+        temp = malloc(pt->pageCount * sizeof(int));
+        for(int i = 0; i < pt->pageCount; i++) {
+            temp[i] = -1;
+        }
+    }
+
+    int found = 0;
+    for(int j = 0; j < pt->pageCount; j++) {
+        if(page == temp[j]) {
+            found = 1;
+            break;
+        }
+    }
+
+    if(!found) {
+        pt->page_fault_count++;
+        if(pt->page_fault_count <= pt->frameCount) {
+            temp[pt->page_fault_count - 1] = page;
+        } else {
+            temp[oldest_page_index] = page;
+            oldest_page_index = (oldest_page_index + 1) % pt->frameCount;
+        }
+    }
 }
+
 void lru(struct page_table *pt, int page) {
  int frames[10];
  int pages[30];
@@ -156,8 +165,6 @@ void lru(struct page_table *pt, int page) {
  if(flag_2 == 0) {
  int min = time[0];
  int pos = 0;
-This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
-https://www.coursehero.com/file/181616670/OjhaPageTablec/
  for(int j = 0; j < pt->frameCount; j++) {
  if(time[j] < min) {
  min = time[j];
@@ -212,8 +219,6 @@ void page_table_destroy(struct page_table** pt) {
 void page_table_access_page(struct page_table *pt, int page) {
  if(pt->mode == FIFO) {
  fifo(pt, page);
-This study source was downloaded by 100000876883955 from CourseHero.com on 11-27-2023 22:59:07 GMT -06:00
-https://www.coursehero.com/file/181616670/OjhaPageTablec/
  } else if(pt->mode == LRU) {
  lru(pt, page);
  } else if(pt->mode == MFU) {
