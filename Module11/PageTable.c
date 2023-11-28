@@ -54,7 +54,7 @@ void page_table_access_page(struct page_table *pt, int page) {
 
         // Find the first free frame
         int free_frame = -1;
-        for (int i = 0; i < pt->frame_count; i++) {
+        for (int i = 0; i < pt->page_count; i++) {
             if (pt->entries[i].frame_number == -1) {
                 free_frame = i;
                 break;
@@ -71,12 +71,12 @@ void page_table_access_page(struct page_table *pt, int page) {
 
             // Determine the index of the frame to be replaced based on the algorithm
             int replace_frame = 0;
-            for (int i = 1; i < pt->frame_count; i++) {
+            for (int i = 1; i < pt->page_count; i++) {
                 // Adjust the logic based on the replacement algorithm (FIFO, LRU, MFU)
                 switch (pt->algorithm) {
                     case FIFO:
                         // FIFO replacement logic: Replace the oldest frame
-                        replace_frame = (replace_frame + 1) % pt->frame_count;
+                        replace_frame = (replace_frame + 1) % pt->page_count;
                         break;
                     case LRU:
                         // LRU replacement logic: Replace the least recently used frame
@@ -115,7 +115,6 @@ void page_table_access_page(struct page_table *pt, int page) {
         }
     }
 }
-
 
 void page_table_display(struct page_table* pt) {
     printf("==== Page Table ====\n");
