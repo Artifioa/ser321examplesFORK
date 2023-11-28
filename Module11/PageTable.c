@@ -26,6 +26,14 @@ struct page_table* page_table_create(int page_count, int frame_count, enum repla
     pt->algorithm = algorithm;
     pt->verbose = verbose;
     pt->page_faults = 0;
+
+    // Initialize the entries
+    for (int i = 0; i < page_count; i++) {
+        pt->entries[i].frame_number = -1; // Indicate that the frame is free
+        pt->entries[i].data = 0; // Clear the valid and dirty bits
+        pt->entries[i].access_count = 0; // Reset the access count
+    }
+
     return pt;
 }
 
