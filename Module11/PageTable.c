@@ -63,9 +63,8 @@ void page_table_access_page(struct page_table *pt, int page) {
 
         if (free_frame != -1) {
             // Found a free frame
-            pt->entries[free_frame].frame_number = page;
-            pt->entries[free_frame].data |= 1; // Set the valid bit
-            //pt->entries[free_frame].access_count = 1; // Reset the access count
+            pt->entries[page].frame_number = free_frame;
+            pt->entries[page].data |= 1; // Set the valid bit
         } else {
             // There are no free frames
             int replace_frame = 0;
@@ -94,7 +93,7 @@ void page_table_access_page(struct page_table *pt, int page) {
 
             // Invalidate the old page
             for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
+                if (pt->entries[i].frame_number == replace_frame) {
                     pt->entries[i].data &= ~1; // Clear the valid bit
                     pt->entries[i].frame_number = -1; // Mark the frame as free
                     break;
@@ -102,9 +101,9 @@ void page_table_access_page(struct page_table *pt, int page) {
             }
 
             // Replace the frame
-            pt->entries[replace_frame].frame_number = page;
-            pt->entries[replace_frame].data |= 1; // Set the valid bit
-            pt->entries[replace_frame].access_count = 1; // Reset the access count
+            pt->entries[page].frame_number = replace_frame;
+            pt->entries[page].data |= 1; // Set the valid bit
+            pt->entries[page].access_count = 1; // Reset the access count
         }
     }
 }
