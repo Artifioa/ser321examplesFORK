@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "PageTable.h"
-#include "DataLoader.c"
+#include "DataLoader.h"
 
 struct page_table_entry {
     unsigned int data; // rightmost bit is valid/invalid bit, second bit from right is dirty bit
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < scenario->refstr_len; i++) {
             page_table_access_page(pt, scenario->refstr[i]);
         }
-        
+
         page_table_display(pt);
         page_table_destroy(&pt);
     }
