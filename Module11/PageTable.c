@@ -58,6 +58,7 @@ void page_table_destroy(struct page_table** pt) {
 void page_table_access_page(struct page_table *pt, int page) {
     // Check if the page is valid
     static int current_time = 0;
+    current_time++;
     if (pt->entries[page].data & 1) {
         // The page is valid, so just increase the access count
         pt->entries[page].access_count++;
@@ -66,15 +67,15 @@ void page_table_access_page(struct page_table *pt, int page) {
         pt->page_faults++;
 
         // Find the first free frame
-        int free_frame = -1;
+        int free_frame = 0;
         for (int i = 0; i < pt->frame_count; i++) {
-            if (pt->entries[i].frame_number == -1) {
+            if (pt->entries[i].frame_number == 0) {
                 free_frame = i;
                 break;
             }
         }
 
-        if (free_frame != -1) {
+        if (free_frame != 0) {
             // Found a free frame
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
@@ -132,7 +133,6 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->entries[replace_frame].access_count = 1; // Reset the access count
         }
     }
-    current_time++;
 }
 
 void page_table_display(struct page_table* pt) {
