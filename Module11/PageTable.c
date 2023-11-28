@@ -35,7 +35,7 @@ struct page_table* page_table_create(int page_count, int frame_count, enum repla
 
     // Initialize the entries
     for (int i = 0; i < page_count; i++) {
-        pt->entries[i].frame_number = 0; // Indicate that the frame is free
+        pt->entries[i].frame_number = -1; // Indicate that the frame is free
         pt->entries[i].data = 0; // Clear the valid and dirty bits
         pt->entries[i].access_count = 0; // Reset the access count
         pt->page_order[i] = -1; // Initialize page order
@@ -67,15 +67,15 @@ void page_table_access_page(struct page_table *pt, int page) {
         pt->page_faults++;
 
         // Find the first free frame
-        int free_frame = 0;
+        int free_frame = -1;
         for (int i = 0; i < pt->frame_count; i++) {
-            if (pt->entries[i].frame_number == 0) {
+            if (pt->entries[i].frame_number == -1) {
                 free_frame = i;
                 break;
             }
         }
 
-        if (free_frame != 0) {
+        if (free_frame != -1) {
             // Found a free frame
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
@@ -120,9 +120,9 @@ void page_table_access_page(struct page_table *pt, int page) {
 
             // Invalidate the old page
             for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
+                if (pt->entries[i].frame_number == replace_frame) {
                     pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->entries[i].frame_number = 0; // Mark the frame as free
+                    pt->entries[i].frame_number = -1; // Mark the frame as free
                     break;
                 }
             }
