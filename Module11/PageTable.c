@@ -79,7 +79,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             // Found a free frame
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
-            //pt->entries[free_frame].access_count = 1; // Reset the access count
+            pt->entries[free_frame].access_count = 1; // Reset the access count
         } else {
             // There are no free frames
             int replace_frame = 0;
