@@ -15,7 +15,7 @@ struct page_table {
     enum replacement_algorithm algorithm;
     int verbose;
     int page_faults;
-    struct queue* fifo_queue;
+    struct Queue* fifo_queue;
     struct list* lru_list;
     struct priority_queue* mfu_queue;
 
