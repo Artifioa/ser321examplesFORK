@@ -88,6 +88,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             for (int i = 0; i < pt->page_count; i++) {
                 if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
                     pt->entries[i].data &= ~1; // Clear the valid bit
+                    pt->entries[i].frame_number = -1; // Mark the frame as free
                     break;
                 }
             }
