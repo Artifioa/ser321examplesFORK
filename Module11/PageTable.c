@@ -65,57 +65,49 @@ void page_table_access_page(struct page_table *pt, int page) {
             // Found a free frame
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
-            pt->entries[free_frame].access_count = 1; // Reset the access count
+            //pt->entries[free_frame].access_count = 1; // Reset the access count
         } else {
-            // There are no free frames, perform page replacement
-
-            // Determine the index of the frame to be replaced based on the algorithm
+            // There are no free frames
             int replace_frame = 0;
-            for (int i = 1; i < pt->frame_count; i++) {
-                // Adjust the logic based on the replacement algorithm (FIFO, LRU, MFU)
-                switch (pt->algorithm) {
-                    case FIFO:
-                        // FIFO replacement logic: Replace the oldest frame
-                        replace_frame = (replace_frame + 1) % pt->frame_count;
-                        break;
-                    case LRU:
-                        // LRU replacement logic: Replace the least recently used frame
+            switch (pt->algorithm) {
+                case FIFO:
+                    // Replace the first frame
+                    replace_frame = 0;
+                    break;
+                case LRU:
+                    // Replace the least recently used frame
+                    for (int i = 1; i < pt->page_count; i++) {
                         if (pt->entries[i].access_count < pt->entries[replace_frame].access_count) {
                             replace_frame = i;
                         }
-                        break;
-                    case MFU:
-                        // MFU replacement logic: Replace the most frequently used frame
+                    }
+                    break;
+                case MFU:
+                    // Replace the most frequently used frame
+                    for (int i = 1; i < pt->page_count; i++) {
                         if (pt->entries[i].access_count > pt->entries[replace_frame].access_count) {
                             replace_frame = i;
                         }
-                        break;
+                    }
+                    break;
+            }
+
+            // Invalidate the old page
+            for (int i = 0; i < pt->page_count; i++) {
+                if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
+                    pt->entries[i].data &= ~1; // Clear the valid bit
+                    pt->entries[i].frame_number = -1; // Mark the frame as free
+                    break;
                 }
             }
 
-            // Save the replaced page
-            int replaced_page = pt->entries[replace_frame].frame_number;
-
-            // Invalidate the old page
-            pt->entries[replace_frame].data &= ~1; // Clear the valid bit
+            // Replace the frame
             pt->entries[replace_frame].frame_number = page;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
-
-            // Update the replaced page entry if it is not -1
-            if (replaced_page != -1) {
-                for (int i = 0; i < pt->page_count; i++) {
-                    if (pt->entries[i].frame_number == replaced_page) {
-                        pt->entries[i].data &= ~1; // Clear the valid bit
-                        pt->entries[i].frame_number = -1; // Mark the frame as free
-                        break;
-                    }
-                }
-            }
         }
     }
 }
-
 
 void page_table_display(struct page_table* pt) {
     printf("==== Page Table ====\n");
@@ -127,7 +119,6 @@ void page_table_display(struct page_table* pt) {
 void page_table_display_contents(struct page_table *pt) {
     printf("page frame | dirty valid\n");
     for (int i = 0; i < pt->page_count; i++) {
-        printf("%d %d | %d %d\n", i, pt->entries[i].frame_number,
-               (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
+        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
     }
 }
