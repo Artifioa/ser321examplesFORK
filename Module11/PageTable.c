@@ -129,10 +129,6 @@ void page_table_access_page(struct page_table *pt, int page) {
 
             // Replace the frame
             pt->entries[replace_frame].frame_number = page;
-            // Print the page replacement
-            if (pt->verbose) {
-                printf("Page %d replaced page %d\n", page, pt->entries[replace_frame].frame_number);
-            }
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
         }
