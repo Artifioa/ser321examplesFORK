@@ -70,7 +70,7 @@ void page_table_access_page(struct page_table *pt, int page) {
         pt->page_faults++;
 
         // Find the first free frame
-        int free_frame = 0;
+        int free_frame = -1;
         for (int i = 0; i < pt->frame_count; i++) {
             if (pt->frames_in_use[i] == 0) {
                 free_frame = i;
@@ -78,7 +78,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             }
         }
 
-        if (free_frame != 0) {
+        if (free_frame != -1) {
             // Found a free frame
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
