@@ -96,6 +96,16 @@ void page_table_access_page(struct page_table *pt, int page) {
                     }
                     // Add the new page to the end of page_order
                     pt->page_order[pt->page_count - 1] = page;
+                
+                    // Invalidate the old page
+                    for (int i = 0; i < pt->page_count; i++) {
+                        if (pt->entries[i].frame_number == replace_frame) {
+                            pt->entries[i].data &= ~1; // Clear the valid bit
+                            pt->entries[i].frame_number = -1; // Update the frame_number
+                            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
+                            break;
+                        }
+                    }
                     break;
                 case LRU:
                     // Replace the least recently used frame
