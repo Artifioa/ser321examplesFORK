@@ -131,15 +131,6 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
             }
 
-            // Invalidate the old page
-            for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
-                    pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->frames_in_use[i] = 0;
-                    break;
-                }
-            }
-
             // Replace the frame
             pt->entries[replace_frame].frame_number = page;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
