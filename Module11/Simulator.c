@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
     }
     page_table_display(pt_mfu);
 
-    page_table_destroy(pt_fifo);
-    page_table_destroy(pt_lru);
-    page_table_destroy(pt_mfu);
+    page_table_destroy(&pt_fifo);
+    page_table_destroy(&pt_lru);
+    page_table_destroy(&pt_mfu);
     free(data);
 }
