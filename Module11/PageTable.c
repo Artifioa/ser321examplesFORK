@@ -55,157 +55,6 @@ void page_table_destroy(struct page_table** pt) {
     *pt = NULL;
 }
 
-
-
-void mfu(struct page_table *pt, int page) {
-    int frames[10];
-    int pages[30];
-    int count[10];
-    int flag_1;
-    int flag_2;
-    for(int i = 0; i < pt->frame_count; i++) {
-        frames[i] = -1;
-        count[i] = 0;
-    }
-    pt->page_faults = 0;
-    for(int i = 0; i < pt->page_count; i++) {
-        flag_1 = 0;
-        flag_2 = 0;
-        for(int j = 0; j < pt->frame_count; j++) {
-            if(frames[j] == pages[i]) {
-                count[j]++;
-                flag_1 = 1;
-                flag_2 = 1;
-                break;
-            }
-        }
-        if(flag_1 == 0) {
-            for(int j = 0; j < pt->frame_count; j++) {
-                if(frames[j] == -1) {
-                    pt->page_faults++;
-                    frames[j] = pages[i];
-                    count[j] = 1;
-                    flag_2 = 1;
-                    break;
-                }
-            }
-        }
-        if(flag_2 == 0) {
-            int max = count[0];
-            int pos = 0;
-            for(int j = 0; j < pt->frame_count; j++) {
-                if(count[j] > max) {
-                    max = count[j];
-                    pos = j;
-                }
-            }
-            pt->page_faults++;
-            frames[pos] = pages[i];
-            count[pos] = 1;
-        }
-    }
-}
-
-int findLRU(int time[], int n) {
-    int i, minimum = time[0], pos = 0;
-    for(i = 1; i < n; ++i) {
-        if(time[i] < minimum) {
-            minimum = time[i];
-            pos = i;
-        }
-    }
-    return pos;
-}
-
-void lru(struct page_table *pt, int page) {
-    int frames[10];
-    int pages[30];
-    int counter[10];
-    int time[10];
-    int flag_1;
-    int flag_2;
-    int pos;
-    int minimum;
-    for(int i = 0; i < pt->frame_count; i++) {
-        frames[i] = -1;
-        counter[i] = 0;
-        time[i] = 0;
-    }
-    pt->page_faults = 0;
-    for(int i = 0; i < pt->page_count; i++) {
-        flag_1 = 0;
-        flag_2 = 0;
-        for(int j = 0; j < pt->frame_count; j++) {
-            if(frames[j] == pages[i]) {
-                counter[j]++;
-                time[j] = i;
-                flag_1 = 1;
-                flag_2 = 1;
-                break;
-            }
-        }
-        if(flag_1 == 0) {
-            for(int j = 0; j < pt->frame_count; j++) {
-                if(frames[j] == -1) {
-                    pt->page_faults++;
-                    frames[j] = pages[i];
-                    counter[j] = 1;
-                    time[j] = i;
-                    flag_2 = 1;
-                    break;
-                }
-            }
-        }
-        if(flag_2 == 0) {
-            pos = findLRU(time, pt->frame_count);
-            pt->page_faults++;
-            frames[pos] = pages[i];
-            counter[pos] = 1;
-            time[pos] = i;
-        }
-    }
-}
-
-
-void fifo(struct page_table *pt, int page) {
-    int frames[10];
-    int pages[30];
-    int flag_1;
-    int flag_2;
-    for(int i = 0; i < pt->frame_count; i++) {
-        frames[i] = -1;
-    }
-    pt->page_faults = 0;
-    for(int i = 0; i < pt->page_count; i++) {
-        flag_1 = 0;
-        flag_2 = 0;
-        for(int j = 0; j < pt->frame_count; j++) {
-            if(frames[j] == pages[i]) {
-                flag_1 = 1;
-                flag_2 = 1;
-                break;
-            }
-        }
-        if(flag_1 == 0) {
-            for(int j = 0; j < pt->frame_count; j++) {
-                if(frames[j] == -1) {
-                    pt->page_faults++;
-                    frames[j] = pages[i];
-                    flag_2 = 1;
-                    break;
-                }
-            }
-        }
-        if(flag_2 == 0) {
-            for(int j = 0; j < pt->frame_count - 1; j++) {
-                frames[j] = frames[j + 1];
-            }
-            frames[pt->frame_count - 1] = pages[i];
-            pt->page_faults++;
-        }
-    }
-}
-
 void page_table_access_page(struct page_table *pt, int page) {
     // Check if the page is valid
     static int current_time = 0;
@@ -218,59 +67,78 @@ void page_table_access_page(struct page_table *pt, int page) {
         pt->page_faults++;
 
         // Find the first free frame
-        int free_frame = 0;
+        int free_frame = -1;
         for (int i = 0; i < pt->frame_count; i++) {
-            if (pt->entries[i].frame_number == 0) {
+            if (pt->entries[i].frame_number == -1) {
                 free_frame = i;
                 break;
             }
         }
 
-        if (free_frame != 0) {
+        if (free_frame != -1) {
             // Found a free frame
-            pt->entries[page].frame_number = free_frame;
+            pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
-            pt->entries[free_frame].access_count = 1; // Reset the access count
+            //pt->entries[free_frame].access_count = 1; // Reset the access count
         } else {
             // There are no free frames
             int replace_frame = 0;
             switch (pt->algorithm) {
                 case FIFO:
-                    fifo(pt, page);
+                    // Replace the oldest frame
+                    replace_frame = pt->page_order[0];
+                    // Invalidate the old page
+                    pt->entries[replace_frame].data &= ~1; // Clear the valid bit
+                    pt->entries[replace_frame].frame_number = -1;
+
+                    // Shift the other elements of page_order to the left
+                    for (int i = 0; i < pt->page_count - 1; i++) {
+                        pt->page_order[i] = pt->page_order[i + 1];
+                    }
+                    // Add the new page to the end of page_order
+                    pt->page_order[pt->page_count - 1] = page;
+
+                    // Update the frame number and valid bit of the new page
+                    pt->entries[page].frame_number = replace_frame;
+                    pt->entries[page].data |= 1; // Set the valid bit
                     break;
                 case LRU:
-                    lru(pt, page);
+                    // Replace the least recently used frame
+                    replace_frame = 0;
+                    for (int i = 1; i < pt->page_count; i++) {
+                        if (pt->last_access_time[i] < pt->last_access_time[replace_frame]) {
+                            replace_frame = i;
+                        }
+                    }
+                    // Invalidate the old page
+                    pt->entries[replace_frame].data &= ~1; // Clear the valid bit
+                    pt->entries[replace_frame].frame_number = -1;
+
+                    // Update the frame number, valid bit, and last access time of the new page
+                    pt->entries[page].frame_number = replace_frame;
+                    pt->entries[page].data |= 1; // Set the valid bit
+                    pt->last_access_time[page] = current_time;
                     break;
                 case MFU:
-                    mfu(pt, page);
-                    break;
-                default:
-                    printf("Invalid page replacement algorithm\n");
+                    // Replace the most frequently used frame
+                    replace_frame = 0;
+                    for (int i = 1; i < pt->page_count; i++) {
+                        if (pt->access_count[i] > pt->access_count[replace_frame]) {
+                            replace_frame = i;
+                        }
+                    }
+                    // Invalidate the old page
+                    pt->entries[replace_frame].data &= ~1; // Clear the valid bit
+                    pt->entries[replace_frame].frame_number = -1;
+                    pt->access_count[replace_frame] = 0; // Reset the access count of the old page
+
+                    // Update the frame number and access count of the new page
+                    pt->entries[page].frame_number = replace_frame;
+                    pt->entries[page].data |= 1; // Set the valid bit
+                    pt->access_count[page] = 1; // Reset the access count of the new page
                     break;
             }
 
-            // Invalidate the old page
-            for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == replace_frame) {
-                    pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->entries[i].frame_number = -1; // Mark the frame as free
-                    break;
-                }
-            }
-
-            // Replace the frame
-            pt->entries[page].frame_number = replace_frame;
-            pt->entries[replace_frame].data |= 1; // Set the valid bit
-            pt->entries[replace_frame].access_count = 1; // Reset the access count
-
-            // Invalidate the replaced page
-            for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number == replace_frame && i != page) {
-                    pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->entries[i].frame_number = -1; // Mark the frame as free
-                    break;
-                }
-            }
         }
     }
 }
@@ -285,6 +153,6 @@ void page_table_display(struct page_table* pt) {
 void page_table_display_contents(struct page_table *pt) {
     printf("page frame | dirty valid\n");
     for (int i = 0; i < pt->page_count; i++) {
-        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, pt->entries[i].data & 2 ? 1 : 0, pt->entries[i].data & 1 ? 1 : 0);
+        printf("   %d     %d |     %d     %d\n", i, pt->entries[i].frame_number, (pt->entries[i].data >> 1) & 1, pt->entries[i].data & 1);
     }
 }
