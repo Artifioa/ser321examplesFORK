@@ -115,6 +115,15 @@ void page_table_access_page(struct page_table *pt, int page) {
                             replace_frame = i;
                         }
                     }
+                    // Invalidate the old page
+                    for (int i = 0; i < pt->page_count; i++) {
+                        if (pt->entries[i].frame_number == replace_frame) {
+                            pt->entries[i].data &= ~1; // Clear the valid bit
+                            pt->entries[i].frame_number = -1; // Update the frame_number
+                            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
+                            break;
+                        }
+                    }
                     // Update the last access time of the new page
                     pt->last_access_time[page] = current_time;
                     break;
@@ -124,6 +133,16 @@ void page_table_access_page(struct page_table *pt, int page) {
                     for (int i = 1; i < pt->page_count; i++) {
                         if (pt->access_count[i] > pt->access_count[replace_frame]) {
                             replace_frame = i;
+                        }
+                    }
+
+                    // Invalidate the old page
+                    for (int i = 0; i < pt->page_count; i++) {
+                        if (pt->entries[i].frame_number == replace_frame) {
+                            pt->entries[i].data &= ~1; // Clear the valid bit
+                            pt->entries[i].frame_number = -1; // Update the frame_number
+                            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
+                            break;
                         }
                     }
                     // Update the access count of the new page
