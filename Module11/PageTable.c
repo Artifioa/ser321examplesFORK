@@ -18,6 +18,7 @@ struct page_table {
     int* page_order; // For FIFO
     int* last_access_time; // For LRU
     int* access_count; // For MFU
+    int* frames_in_use;
 };
 
 struct page_table* page_table_create(int page_count, int frame_count, enum replacement_algorithm algorithm, int verbose) {
@@ -32,6 +33,7 @@ struct page_table* page_table_create(int page_count, int frame_count, enum repla
     pt->page_order = malloc(sizeof(int) * page_count);
     pt->last_access_time = malloc(sizeof(int) * page_count);
     pt->access_count = malloc(sizeof(int) * page_count);
+    pt->frames_in_use = calloc(frame_count, sizeof(int));
 
     // Initialize the entries
     for (int i = 0; i < page_count; i++) {
@@ -51,6 +53,7 @@ void page_table_destroy(struct page_table** pt) {
     free((*pt)->page_order);
     free((*pt)->last_access_time);
     free((*pt)->access_count);
+    free((*pt)->frames_in_use);
     free(*pt);
     *pt = NULL;
 }
@@ -68,8 +71,8 @@ void page_table_access_page(struct page_table *pt, int page) {
 
         // Find the first free frame
         int free_frame = -1;
-        for (int i = 0; i < pt->page_count; i++) {
-            if (pt->entries[i].frame_number == -1) {
+        for (int i = 0; i < pt->frame_count; i++) {
+            if (pt->frames_in_use[i] == 0) {
                 free_frame = i;
                 break;
             }
@@ -80,6 +83,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->entries[free_frame].frame_number = page;
             pt->entries[free_frame].data |= 1; // Set the valid bit
             //pt->entries[free_frame].access_count = 1; // Reset the access count
+            pt->frames_in_use[free_frame] = 1;
         } else {
             // There are no free frames
             int replace_frame = 0;
@@ -122,7 +126,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             for (int i = 0; i < pt->page_count; i++) {
                 if (pt->entries[i].frame_number == pt->entries[replace_frame].frame_number) {
                     pt->entries[i].data &= ~1; // Clear the valid bit
-                    pt->entries[i].frame_number = -1; // Mark the frame as free
+                    pt->frames_in_use[i] = 0;
                     break;
                 }
             }
@@ -131,6 +135,7 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->entries[replace_frame].frame_number = page;
             pt->entries[replace_frame].data |= 1; // Set the valid bit
             pt->entries[replace_frame].access_count = 1; // Reset the access count
+            pt->frames_in_use[replace_frame] = 1;
         }
     }
 }
