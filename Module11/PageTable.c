@@ -108,6 +108,7 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
                 case LRU:
                     // Replace the least recently used frame
+                    replace_page = 0;
                     for (int i = 1; i < pt->page_count; i++) {
                         if (pt->last_access_time[i] < pt->last_access_time[replace_page]) {
                             replace_page = i;
