@@ -121,9 +121,7 @@ void page_table_access_page(struct page_table *pt, int page) {
                         if (pt->access_count[i] > pt->access_count[replace_page]) {
                             replace_page = i;
                         }
-                    }
-                    // Update the access count of the new page
-                    pt->access_count[page]++;
+                    }        
                     break;
             }
 
