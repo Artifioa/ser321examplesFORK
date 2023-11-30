@@ -137,16 +137,17 @@ void page_table_access_page(struct page_table *pt, int page) {
                     }
                 }
                 break;
+            }
+            replace_frame = pt->entries[replace_page].frame_number;
+            pt->entries[replace_page].data &= ~1;
+            pt->entries[replace_page].frame_number = -1;
+            pt->entries[replace_page].access_count = 0;
+            pt->frames_in_use[replace_frame] = 0;
+            pt->entries[page].frame_number = replace_frame;
+            pt->entries[page].data |= 1;
+            pt->frames_in_use[replace_frame] = 1;
+            }
         }
-        replace_frame = pt->entries[replace_page].frame_number;
-        pt->entries[replace_page].data &= ~1;
-        pt->entries[replace_page].frame_number = -1;
-        pt->frames_in_use[replace_frame] = 0;
-        pt->entries[page].frame_number = replace_frame;
-        pt->entries[page].data |= 1;
-        pt->frames_in_use[replace_frame] = 1;
-    }
-}
     }
 }
 
