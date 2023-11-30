@@ -80,8 +80,8 @@ void page_table_access_page(struct page_table *pt, int page) {
 
         if (free_frame != -1) {
             // Found a free frame
-            pt->entries[free_frame].frame_number = page;
-            pt->entries[free_frame].data |= 1; // Set the valid bit
+            pt->entries[page].frame_number = page;
+            pt->entries[page].data |= 1; // Set the valid bit
             pt->frames_in_use[free_frame] = 1;
         } else {
             // There are no free frames
