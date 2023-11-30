@@ -94,11 +94,6 @@ void page_table_access_page(struct page_table *pt, int page) {
             // There are no free frames
             int replace_page = -1;
             int replace_frame = 0;
-            for (int i = 0; i < pt->page_count; i++) {
-                if (pt->entries[i].frame_number != -1) {
-                    pt->last_access_time[i] = current_time;
-                }
-            }
             switch (pt->algorithm) {
                 case FIFO:
                     // Replace the oldest frame
