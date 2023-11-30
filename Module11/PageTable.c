@@ -50,15 +50,10 @@ struct page_table* page_table_create(int page_count, int frame_count, enum repla
 
 void page_table_destroy(struct page_table** pt) {
     free((*pt)->entries);
-    (*pt)->entries = NULL;
     free((*pt)->page_order);
-    (*pt)->page_order = NULL;
     free((*pt)->last_access_time);
-    (*pt)->last_access_time = NULL;
     free((*pt)->access_count);
-    (*pt)->access_count = NULL;
     free((*pt)->frames_in_use);
-    (*pt)->frames_in_use = NULL;
     free(*pt);
     *pt = NULL;
 }
@@ -96,7 +91,6 @@ void page_table_access_page(struct page_table *pt, int page) {
                 }
             }
         }else {
-    pt->page_faults++;
     int free_frame = -1;
     for (int i = 0; i < pt->frame_count; i++) {
         if (pt->frames_in_use[i] == 0) {
