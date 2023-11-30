@@ -85,43 +85,25 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->frames_in_use[free_frame] = 1;
         } else {
             // There are no free frames
+            int replace_page = -1;
             int replace_frame = 0;
             switch (pt->algorithm) {
                 case FIFO:
                     // Replace the oldest frame
-                    replace_frame = pt->page_order[0];
+                    replace_page = pt->page_order[0];
                     // Shift the other elements of page_order to the left
                     for (int i = 0; i < pt->page_count - 1; i++) {
                         pt->page_order[i] = pt->page_order[i + 1];
                     }
                     // Add the new page to the end of page_order
                     pt->page_order[pt->page_count - 1] = page;
-                
-                    // Invalidate the old page
-                    for (int i = 0; i < pt->page_count; i++) {
-                        if (pt->entries[i].frame_number == replace_frame) {
-                            pt->entries[i].data &= ~1; // Clear the valid bit
-                            pt->entries[i].frame_number = -1; // Update the frame_number
-                            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
-                            break;
-                        }
-                    }
                     break;
                 case LRU:
                     // Replace the least recently used frame
-                    replace_frame = 0;
+                    replace_page = 0;
                     for (int i = 1; i < pt->page_count; i++) {
-                        if (pt->last_access_time[i] < pt->last_access_time[replace_frame]) {
-                            replace_frame = i;
-                        }
-                    }
-                    // Invalidate the old page
-                    for (int i = 0; i < pt->page_count; i++) {
-                        if (pt->entries[i].frame_number == replace_frame) {
-                            pt->entries[i].data &= ~1; // Clear the valid bit
-                            pt->entries[i].frame_number = -1; // Update the frame_number
-                            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
-                            break;
+                        if (pt->last_access_time[i] < pt->last_access_time[replace_page]) {
+                            replace_page = i;
                         }
                     }
                     // Update the last access time of the new page
@@ -129,20 +111,10 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
                 case MFU:
                     // Replace the most frequently used frame
-                    replace_frame = 0;
+                    replace_page = 0;
                     for (int i = 1; i < pt->page_count; i++) {
-                        if (pt->access_count[i] > pt->access_count[replace_frame]) {
-                            replace_frame = i;
-                        }
-                    }
-
-                    // Invalidate the old page
-                    for (int i = 0; i < pt->page_count; i++) {
-                        if (pt->entries[i].frame_number == replace_frame) {
-                            pt->entries[i].data &= ~1; // Clear the valid bit
-                            pt->entries[i].frame_number = -1; // Update the frame_number
-                            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
-                            break;
+                        if (pt->access_count[i] > pt->access_count[replace_page]) {
+                            replace_page = i;
                         }
                     }
                     // Update the access count of the new page
@@ -150,10 +122,16 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
             }
 
+            // Invalidate the old page
+            replace_frame = pt->entries[replace_page].frame_number;
+            pt->entries[replace_page].data &= ~1; // Clear the valid bit
+            pt->entries[replace_page].frame_number = -1; // Update the frame_number
+            pt->frames_in_use[replace_frame] = 0; // Mark the frame as not in use
+
             // Replace the frame
-            pt->entries[replace_frame].frame_number = page;
-            pt->entries[replace_frame].data |= 1; // Set the valid bit
-            pt->entries[replace_frame].access_count = 1; // Reset the access count
+            pt->entries[page].frame_number = replace_frame;
+            pt->entries[page].data |= 1; // Set the valid bit
+            pt->entries[page].access_count = 1; // Reset the access count
             pt->frames_in_use[replace_frame] = 1;
         }
     }
