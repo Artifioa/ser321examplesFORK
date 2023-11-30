@@ -117,7 +117,6 @@ void page_table_access_page(struct page_table *pt, int page) {
                     break;
                 case MFU:
                     // Replace the most frequently used frame
-                    replace_page = 0;
                     for (int i = 1; i < pt->page_count; i++) {
                         if (pt->access_count[i] > pt->access_count[replace_page]) {
                             replace_page = i;
