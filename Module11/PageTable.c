@@ -83,6 +83,13 @@ void page_table_access_page(struct page_table *pt, int page) {
             pt->entries[page].frame_number = free_frame;
             pt->entries[page].data |= 1; // Set the valid bit
             pt->frames_in_use[free_frame] = 1;
+            // Add the new page to the end of page_order
+            for (int i = 0; i < pt->page_count; i++) {
+                if (pt->page_order[i] == -1) {
+                    pt->page_order[i] = page;
+                    break;
+                }
+            }
         } else {
             // There are no free frames
             int replace_page = -1;
