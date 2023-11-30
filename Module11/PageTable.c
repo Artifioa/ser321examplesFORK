@@ -91,51 +91,51 @@ void page_table_access_page(struct page_table *pt, int page) {
                 }
             }
         }else {
-    int free_frame = -1;
-    for (int i = 0; i < pt->frame_count; i++) {
-        if (pt->frames_in_use[i] == 0) {
-            free_frame = i;
-            break;
-        }
-    }
-    if (free_frame != -1) {
-        pt->entries[page].frame_number = free_frame;
-        pt->entries[page].data |= 1;
-        pt->frames_in_use[free_frame] = 1;
-        for (int i = 0; i < pt->page_count; i++) {
-            if (pt->page_order[i] == -1) {
-                pt->page_order[i] = page;
-                break;
-            }
-        }
-    } else {
-        int replace_page = -1;
-        int replace_frame = 0;
-        switch (pt->algorithm) {
-            case FIFO:
-                replace_page = pt->page_order[0];
-                for (int i = 0; i < pt->page_count - 1; i++) {
-                    pt->page_order[i] = pt->page_order[i + 1];
+            int free_frame = -1;
+            for (int i = 0; i < pt->frame_count; i++) {
+                if (pt->frames_in_use[i] == 0) {
+                    free_frame = i;
+                    break;
                 }
-                pt->page_order[pt->page_count - 1] = page;
-                break;
-            case LRU:
-                replace_page = 0;
-                for (int i = 1; i < pt->page_count; i++) {
-                    if (pt->last_access_time[i] < pt->last_access_time[replace_page]) {
-                        replace_page = i;
+            }
+            if (free_frame != -1) {
+                pt->entries[page].frame_number = free_frame;
+                pt->entries[page].data |= 1;
+                pt->frames_in_use[free_frame] = 1;
+                for (int i = 0; i < pt->page_count; i++) {
+                    if (pt->page_order[i] == -1) {
+                        pt->page_order[i] = page;
+                        break;
                     }
                 }
-                break;
-            case MFU:
-                replace_page = 0;
-                for (int i = 1; i < pt->page_count; i++) {
-                    if (pt->entries[i].access_count > pt->entries[replace_page].access_count) {
-                        replace_page = i;
+            } else {
+                int replace_page = -1;
+                int replace_frame = 0;
+                switch (pt->algorithm) {
+                    case FIFO:
+                        replace_page = pt->page_order[0];
+                        for (int i = 0; i < pt->page_count - 1; i++) {
+                            pt->page_order[i] = pt->page_order[i + 1];
+                        }
+                        pt->page_order[pt->page_count - 1] = page;
+                        break;
+                    case LRU:
+                        replace_page = 0;
+                        for (int i = 1; i < pt->page_count; i++) {
+                            if (pt->last_access_time[i] < pt->last_access_time[replace_page]) {
+                                replace_page = i;
+                            }
+                        }
+                        break;
+                    case MFU:
+                        replace_page = 0;
+                        for (int i = 1; i < pt->page_count; i++) {
+                            if (pt->entries[i].access_count > pt->entries[replace_page].access_count) {
+                                replace_page = i;
+                            }
+                        }
+                        break;
                     }
-                }
-                break;
-            }
             replace_frame = pt->entries[replace_page].frame_number;
             pt->entries[replace_page].data &= ~1;
             pt->entries[replace_page].frame_number = -1;
