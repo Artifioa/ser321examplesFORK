@@ -308,6 +308,7 @@ public class Client {
 
       // Contact the Registry to check for the available services
       client.getServices();
+      client.getNodeServices();
       int serviceNumber;
       // List the services in the terminal and the client can choose one
       do {
