@@ -1,0 +1,41 @@
+// This service can do simple can do a simple string encryption. 
+// Encyrpt will take a string and return an encrytion version of it. 
+// Decrypt will take an already encrypted string and return its decrypted version.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "service";
+option java_outer_classname = "encryptionProto";
+
+package services;
+
+service Encryption {
+  rpc encrypt (EncryptRequest) returns (EncryptResponse) {}
+  rpc decrypt (DecryptRequest) returns (DecryptResponse) {}
+
+}
+
+// The request is a string to encrypt
+message EncryptRequest {
+  string input = 2;
+}
+
+// The request is a string to decrypt
+message DecryptRequest {
+  string input = 2;
+}
+
+// The response message for encrypt
+message EncryptResponse {
+  bool isSuccess = 1;
+  string solution = 2;   // The encrypted string 
+  string error = 3;      // Error message, a String of your choice to show what went wrong
+}
+
+// The response message for decrypt 
+message DecryptResponse {
+  bool isSuccess = 1;
+  string solution = 2;   // The decrypted string 
+  string error = 3;      // Error message, a String of your choice to show what went wrong
+}

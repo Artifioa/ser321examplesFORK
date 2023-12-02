@@ -1,0 +1,45 @@
+// A simple library service where clients can view available books and checkout/return books.
+// The server will act as a library and should start with a set amount of books. It will maintain a
+// count of all books currently available (there might be multiple copies of the same book) and keep 
+// track of clients who have checked out what book. Clients shouldn't be able to checkout a book that 
+// isn't available or return books that they haven't checkout out.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "service";
+option java_outer_classname = "LibraryProto"; 
+
+import "google/protobuf/empty.proto";
+
+package services;
+
+service Library {
+  rpc checkout (LibraryReq) returns (LibraryRes) {}
+  rpc returnBook (LibraryReq) returns (LibraryRes) {}
+  rpc available (google.protobuf.Empty) returns (AvailableRes) {}
+}
+
+// Client request to checkout or return a book
+message LibraryReq {
+  string name = 1;	// name of person returning or checking out a book
+  Book book = 2;	// the book being returned or checked out
+}
+
+// Server resonse to client checkout/return requests
+message LibraryRes {
+  bool isSuccess = 1;	// was the checkout or return successful?
+  string error = 2;	// isSuccess is false, inform the client of what went wrong
+}
+
+// Server returns a list of available books
+message AvailableRes {
+  repeated Book books = 1;
+}
+
+// A book in the library. Books are uniquely indentified by title and author
+message Book {
+  string title = 1;
+  string author = 2;
+}
+

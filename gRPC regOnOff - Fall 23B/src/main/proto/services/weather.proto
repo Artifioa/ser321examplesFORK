@@ -1,0 +1,27 @@
+//Simple weather finding service
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "service";
+option java_outer_classname = "WeatherProto";
+
+package services;
+
+service Weather {
+  rpc GetCurrentWeather (WeatherRequest) returns (WeatherResponse) {}
+  rpc GetWeatherForecast (WeatherRequest) returns (WeatherForecastResponse) {}
+}
+
+message WeatherRequest {
+  string location = 1;
+}
+
+message WeatherResponse {
+  string description = 1;
+  float temperature = 2;
+}
+
+message WeatherForecastResponse {
+  repeated WeatherResponse forecast = 1;
+}
