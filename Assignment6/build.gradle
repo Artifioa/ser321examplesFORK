@@ -170,8 +170,8 @@ task runNode(type: JavaExec) {
   // default args
   args registryHost
   args grpcPort
-  args serviceHost
-  args servicePort
+  args project.hasProperty('host') ? host : serviceHost
+  args project.hasProperty('port') ? port : servicePort
   args nodeName
   args regOn
 }
