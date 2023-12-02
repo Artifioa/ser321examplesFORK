@@ -361,7 +361,7 @@ public class Client {
           List<Integer> numbers = Arrays.stream(reader.readLine().split(" "))
               .map(Integer::parseInt)
               .collect(Collectors.toList());
-          System.out.println("Choose a sorting algorithm (1 for MERGE, 2 for QUICK, 3 for INTERN):");
+          System.out.println("Choose a sorting algorithm (1 for MERGE, 2 for QUICK, 3 for DEFAULT):");
           int algoNumber = Integer.parseInt(reader.readLine());
           service.Algo algo;
           switch (algoNumber) {
